@@ -73,18 +73,17 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  double t_start = 0,  t_end = atof(argv[3]);//计算时间
+  double t_start = 0, t_end = atof(argv[3]);//计算时间
   double x_start = 0, x_end = 1;//计算区域
   u_int Nx = atoi(argv[1]);
   double CFL = atof(argv[2]);
 
   SCL1D<bU> Q(Nx, t_start, t_end, x_start, x_end, initial, CFL);
   std::cout << "Initialization completed ..." << std::endl;
-  clock_t t1, t2;
-  t1 = clock();
+  double t1 = omp_get_wtime();
   std::cout << "Start to solve ..." << std::endl;
   Q.Solve();
-  t2 = clock();
+  double t2 = omp_get_wtime();
 
   std::ofstream outfile("sol.dat",std::ios::out);
   if(!outfile) {
@@ -94,7 +93,7 @@ int main(int argc, char* argv[])
   Q.print_rupe(outfile);
   outfile.close();
 
-  std::cout << "Time consumed: " << (double)(t2-t1)/CLOCKS_PER_SEC << std::endl;
+  std::cout << "Time consumed: " << (t2-t1)<< std::endl;
 
   return 0;
 }
