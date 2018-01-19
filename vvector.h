@@ -210,3 +210,4 @@ vvector<T> operator/(const vvector<T>& v1, const T1& a)
     return v3;
 }
 #endif //VVECTOR_H 
+

@@ -5,8 +5,8 @@
  * @version 1.0
  * @date 2018-01-17
  */
-#ifndef SCL1D_H
-#define SCL1D_H
+#ifndef Lagranian1D_H
+#define Lagranian1D_H
 
 #include <iostream>
 #include <assert.h>
@@ -14,58 +14,9 @@
 #include <omp.h>
 #include "para.h"
 #include "vvector.h"
+#include "mvector.h"
 
 typedef mvector<double,3> bU; //(D, m, E), cell average
-
-double fp(const bU& U, double p, const double Gamma) {
-  double gamma2 = 1 - pow(U[1]/(p+U[2]),2);
-  return U[2]+p - U[0]/sqrt(gamma2) - Gamma/(Gamma-1)*p/gamma2;
-}
-double fpp(const bU& U, double p, const double Gamma) {
-  double Ep = U[2] + p;
-  double tmp = pow(U[1]/Ep, 2);
-  double gamma2 = 1 - tmp;
-  return 1 + U[0]*tmp/Ep/pow(gamma2, 1.5) - Gamma/(Gamma-1)*(gamma2 - 2*p*tmp/Ep)/pow(gamma2,2);
-}
-/**
- * @brief Con2Pri solve (rho,u,p) from (D, m, E)
- *
- * @param U conservative variables (D, m, E)
- * @param gamma
- *
- * @return primitive variables (rho, u, p)
- */
-bU Con2Pri(const bU& U, const double Gamma) {
-  bU prim;
-  //solve a nonlinear equation by Newton method to obtain pressure p
-  u_int ite(0), MAXITE(20);
-  double eps = 1e-15;
-  double p(0), p1(p), y(fp(U,p, Gamma));
-  while(fabs(y) > eps && ite < MAXITE) {
-    p1 = p - y/fpp(U, p, Gamma);
-    y = fp(U, p1, Gamma);
-    ite++;
-    if(fabs(p1-p) < eps) { p = p1; break; }
-    p = p1;
-  }
-  //std::cout << ite << " " << y << std::endl;
-  prim[2] = p;
-  prim[1] = U[1]/(U[2]+p);
-  prim[0] = U[0]*sqrt(1-pow(prim[1],2));
-
-  return prim;
-}
-
-bU Pri2Con(const bU& U, const double Gamma) {
-  bU Con;
-  double gamma = 1./sqrt(1-U[1]*U[1]);
-  double h = 1 + U[2]/U[0]*Gamma/(Gamma-1);
-  Con[0] = gamma*U[0];
-  Con[1] = Con[0]*h*gamma*U[1];
-  Con[2] = Con[0]*h*gamma - U[2];
-
-  return Con;
-}
 
 class GHOST {
   public:
@@ -74,12 +25,11 @@ class GHOST {
     double Gamma;
 };
 
-template<class T>
-class SCL1D {
+class Lagranian1D {
 	private:
-		typedef T (*Lfun)(const double t, const double x, double& gamma);
-		typedef T (*NLfun)(T u, double t, double x);
-		typedef vvector<T> Sol;
+		typedef bU (*Lfun)(const double t, const double x, double& gamma);
+		typedef bU (*NLfun)(bU u, double t, double x);
+		typedef vvector<bU> Sol;
 		u_int N_x;
 		double t_start;
 		double t_end;
@@ -97,7 +47,7 @@ class SCL1D {
     GHOST ghostl, ghostr;
 
 	public:
-		SCL1D(u_int Nx, double t_start, double t_end, double x_start, double x_end,
+		Lagranian1D(u_int Nx, double t_start, double t_end, double x_start, double x_end,
         Lfun initial, double CFL = 0.5)
       : N_x(Nx), t_start(t_start), t_end(t_end), x_start(x_start), x_end(x_end),
       initial(initial), CFL(CFL) {
@@ -115,7 +65,7 @@ class SCL1D {
         }
       }
 
-  private:
+  public:
     void Initial() {
       for(u_int j = 0; j != N_x; ++j) {
         Pri[j] = initial(t_start, 0.5*(mesh[j]+mesh[j+1]), Gamma[j]);
@@ -132,17 +82,22 @@ class SCL1D {
       ghostr.Gamma = Gamma[N_x-1];
     }
 
-    double cal_max_speed(int i) {
-      double h = 1+Pri[i][2]/Pri[i][0]*Gamma[i]/(Gamma[i]-1);
-      double cs = sqrt(Gamma[i]*Pri[i][2]/Pri[i][0]/h);
-      double u = Pri[i][1];
-      double lam1 = (u-cs)/(1-u*cs)-u;
-      double lam3 = (u+cs)/(1+u*cs)-u;
-      return std::max(fabs(lam1), fabs(lam3));
-    }
+    double fp(const bU& U, double p, const double Gamma);
+   double fpp(const bU& U, double p, const double Gamma);
+   /**
+     * @brief Con2Pri solve (rho,u,p) from (D, m, E)
+     *
+     * @param U conservative variables (D, m, E)
+     * @param gamma
+     *
+     * @return primitive variables (rho, u, p)
+     */
+    bU Con2Pri(const bU& U, const double Gamma);
+    bU Pri2Con(const bU& U, const double Gamma);
+    double cal_max_speed(int i);
 
     double t_step(const double CFL, double& alpha) {
-      double a(1e-2), tmp_lam, hi, tmp_t;
+      double a(1), tmp_lam, hi, tmp_t;
       alpha = 0;
       for(u_int i = 0; i < N_x; ++i) {
         hi = mesh[i+1] - mesh[i];
@@ -154,220 +109,45 @@ class SCL1D {
       return CFL*a;
     }
 
-    //void rp_solver(const bU& UL, const bU& UR, double& us, double& ps, const double gammal, const double gammar) {
-      //double pl = EOS(UL, gammal);
-      //double pr = EOS(UR, gammar);
-      //double ul = UL[1];
-      //double ur = UR[1];
-      //double al = sqrt(gammal*pl/UL[0]);
-      //double ar = sqrt(gammar*pr/UR[0]);
-      //if(al != al) std::cout << "al wrong: " << pl << " " << UL[0] << std::endl;
-      //if(ar != ar) std::cout << "ar wrong: " << pr << " " << UR[0] << std::endl;
-      //double zl = UL[0] * al;
-      //double zr = UR[0] * ar;
-      //double sum = zl + zr;
-      //us = (zl*ul + zr*ur)/sum - (pr-pl)/sum;
-      //ps = (zl*pr + zr*pl)/sum - zl*zr*(ur-ul)/sum;
-    //}
+    bU F(const bU& CON, const bU& PRI);
 
-    bU F(const bU& CON, const bU& PRI) {
-      bU tmp;
-      tmp[0] = 0;
-      tmp[1] = PRI[2];
-      tmp[2] = PRI[1]*PRI[2];
-      return tmp;
-    }
+    bU LF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha);
+    void cal_flux_LF(double alpha);
+    void forward_LF(double dt, double alpha);
 
-    bU LF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha) {
-      return 0.5*(F(CONL, PRIL) + F(CONR, PRIR)) - 0.5*(CONR-CONL)*alpha;
-    }
+    bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar);
+    void cal_flux_HLLC(double alpha);
+    void forward_HLLC(double dt, double alpha);
 
-    bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar) {
-      double SL, SR, ui, ci, vl, vr;
-      double srhol, srhor;
-      double hl, csl, ul, hr, csr, ur;
-      double lam1, lam2, lam3, lam4;
-
-      //wave speed of left and right side
-      hl = 1+PRIL[2]/PRIL[0]*Gammal/(Gammal-1);
-      csl = sqrt(Gammal*PRIL[2]/PRIL[0]/hl);
-      ul = PRIL[1];
-      lam1 = (ul-csl)/(1-ul*csl)-ul;
-      lam2 = (ul+csl)/(1+ul*csl)-ul;
-      hr = 1+PRIR[2]/PRIR[0]*Gammar/(Gammar-1);
-      cs = sqrt(Gammar*PRIR[2]/PRIR[0]/hr);
-      ur = PRIR[1];
-      lam3 = (ur-csr)/(1-ur*csr)-ur;
-      lam4 = (ur+csr)/(1+ur*csr)-ur;
-      SL = std::min(std::min((lam1), (lam2)), std::min((lam3), (lam4)));
-      SR = std::max(std::max((lam1), (lam2)), std::max((lam3), (lam4)));
-      //roe_average of ul, ur
-      srhol = sqrt(PRIL[0]);
-      srhor = sqrt(PRIR[0]);
-      ui = (srhol*ul + srhor*ur)/(srhol+srhor);
-      //left and right speed limit
-      vl = ul - ui;
-      vr = ur - ui;
-
-      if(SL > 0) { return F(CONL. PRIL); }
-      else if(SR < 0) { return F(CONR. PRIR); }
-      else {
-        double SM = (PRIR[0]*vr*(SR-vr) - PRIL[0]*vl*(SL-vl) + PRIL[2] - PRIR[2]) / (PRIR[0]*(SR-vr) - PRIL[0]*(SL-vl));
-        if(SM >= 0) {
-          return SM*
-        }
-      }
-
-      S1 = std::min(vl-cl, -ci);
-      S2 = std::max(vr+cr, ci);
-      return 0.5*(F(CONL, PRIL) + F(CONR, PRIR)) - 0.5*(CONR-CONL)*alpha;
-    }
-
-    void cal_flux_LF(double alpha) {
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x+1; ++i) {
-        if(i == 0) FLUX[i] = LF(ghostl.Con, Con[i], ghostl.Pri, Pri[i], alpha);
-        else if(i == N_x) FLUX[i] = LF(Con[i-1], ghostr.Con, Pri[i-1], ghostr.Pri, alpha);
-        else FLUX[i] = LF(Con[i-1], Con[i], Pri[i-1], Pri[i], alpha);
-      }
-    }
-
-    void cal_flux_HLLC(double alpha) {
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x+1; ++i) {
-        if(i == 0) FLUX[i] = HLLC(ghostl.Con, Con[i], ghostl.Pri, Pri[i], ghostl.Gamma, Gamma[i]);
-        else if(i == N_x) FLUX[i] = HLLC(Con[i-1], ghostr.Con, Pri[i-1], ghostr.Pri, Gamma[i-1], ghostr.Gamma);
-        else FLUX[i] = HLLC(Con[i-1], Con[i], Pri[i-1], Pri[i], Gamma[i-1], Gamma[i]);
-      }
-    }
-
-    void cal_us_roeav() {
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x+1; ++i) {
-        double srhol, srhor, ul, ur;
-        if(i == 0) {
-          srhol = sqrt(ghostl.Pri[0]);
-          ul = sqrt(ghostl.Pri[1]);
-        }
-        else {
-          srhol = sqrt(Pri[i-1][0]);
-          ul = Pri[i-1][1];
-        }
-        if(i == N_x) {
-          srhor = sqrt(ghostr.Pri[0]);
-          ur = sqrt(ghostr.Pri[1]);
-        }
-        else {
-          srhor = sqrt(Pri[i][0]);
-          ur = Pri[i][1];
-        }
-        us[i] = (srhol*ul + srhor*ur)/(srhol+srhor);
-      }
-      us[0] = 0;
-      us[N_x] = 0;
-    }
-
-    void move_mesh(double dt) {
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x+1; ++i) {
-        mesh[i] += dt * us[i];
-      }
-    }
-
-    void forward_LF(double dt, double alpha) {
-      InfiniteBD();
-      cal_flux_LF(alpha);
-      cal_us_roeav();
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x; ++i) {
-        Con[i] *= (mesh[i+1]-mesh[i]);
-      }
-      move_mesh(dt);
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x; ++i) {
-        Con[i] = (Con[i] - dt*(FLUX[i+1] - FLUX[i])) / (mesh[i+1]-mesh[i]);
-      }
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x; ++i) {
-        Pri[i] = Con2Pri(Con[i], Gamma[i]);
-      }
-    }
-
-    void forward_HLLC(double dt, double alpha) {
-      InfiniteBD();
-      cal_flux_HLLC(alpha);
-      cal_us_roeav();
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x; ++i) {
-        Con[i] *= (mesh[i+1]-mesh[i]);
-      }
-      move_mesh(dt);
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x; ++i) {
-        Con[i] = (Con[i] - dt*(FLUX[i+1] - FLUX[i])) / (mesh[i+1]-mesh[i]);
-      }
-#pragma omp parallel for num_threads(Nthread)
-      for(u_int i = 0; i < N_x; ++i) {
-        Pri[i] = Con2Pri(Con[i], Gamma[i]);
-      }
-    }
+    void cal_us_roeav();
+    void move_mesh(double dt);
 
   public:
 		void Solve() {
       double t_now(t_start), dt(0), alpha(0);
 			Initial();
 
+      int n = 0;
       while(t_now < t_end - 1e-10) {
+      //while( n < 1 ) {
         dt = t_step(CFL, alpha);
         if(dt + t_now > t_end) dt = t_end - t_now;
 
+        LF(Con[0], Con[1], Pri[0], Pri[1], 1);
         //forward_LF(dt, alpha);
-        forward_HLLC(dt, alpha);
+        //forward_HLLC(dt, alpha);
 
         t_now += dt;
         std::cout << "t: " << t_now << " , dt: " << dt << std::endl;
+        n ++ ;
       }
 		}
 
-		template<class Type> friend std::ostream& operator<<(std::ostream&,SCL1D<Type>&);
-
-    void print_con(std::ostream& os) {
-      os.setf(std::ios::scientific);
-      os.precision(16);
-      for(u_int i=0; i < N_x; i++) {
-        os << 0.5*(mesh[i]+mesh[i+1]) << " " << Con[i] << "\n";
-      }
-    }
-
-    void print_pri(std::ostream& os) {
-      os.setf(std::ios::scientific);
-      os.precision(16);
-      for(u_int i=0; i < N_x; i++) {
-        os << 0.5*(mesh[i]+mesh[i+1]) << " " << Pri[i] << "\n";
-      }
-    }
-
-    void print_rupe(std::ostream& os) {
-      os.setf(std::ios::scientific);
-      os.precision(16);
-      for(u_int i=0; i < N_x; i++) {
-        os << 0.5*(mesh[i]+mesh[i+1]) << " "
-          << Pri[i][0] << " " << Pri[i][1] << " " << Pri[i][2] << " "
-          << Pri[i][2]/Pri[i][0]/(Gamma[i]-1) << "\n";
-      }
-    }
-
+    void print_con(std::ostream& os);
+    void print_pri(std::ostream& os);
+    void print_rupe(std::ostream& os);
+		friend std::ostream& operator<<(std::ostream&, const Lagranian1D&);
 };
-
-template<class T>
-std::ostream& operator<<(std::ostream& os, SCL1D<T>& H){
-	os.setf(std::ios::scientific);
-  os.precision(16);
-	for(u_int i=0; i < H.N_x; i++) {
-		os << 0.5*(H.mesh[i]+H.mesh[i+1]) << " " << H.Pri[i] << "\n";
-	}
-	return os;
-}
 
 #endif
 

@@ -18,18 +18,18 @@
 
 bU initial(const double t, const double x, double& Gamma) {
   bU v;
-  //if(x < 0.5) {
-    //v[0] = 10;
-    //v[1] = 0;
-    //v[2] = 40./3;
-    //Gamma = 5./3;
-  //}
-  //else {
-    //v[0] = 1;
-    //v[1] = 0;
-    //v[2] = 1e-6;
-    //Gamma = 5./3;
-  //}
+  if(x < 0.5) {
+    v[0] = 10;
+    v[1] = 0;
+    v[2] = 40./3;
+    Gamma = 5./3;
+  }
+  else {
+    v[0] = 1;
+    v[1] = 0;
+    v[2] = 1e-6;
+    Gamma = 5./3;
+  }
   //if(x < 0.5) {
     //v[0] = 1;
     //v[1] = 0;
@@ -42,24 +42,24 @@ bU initial(const double t, const double x, double& Gamma) {
     //v[2] = 1e-2;
     //Gamma = 5./3;
   //}
-  if(x < 0.1) {
-    v[0] = 1;
-    v[1] = 0;
-    v[2] = 1e3;
-    Gamma = 1.4;
-  }
-  else if(x < 0.9){
-    v[0] = 1;
-    v[1] = 0;
-    v[2] = 1e-2;
-    Gamma = 1.4;
-  }
-  else {
-    v[0] = 1;
-    v[1] = 0;
-    v[2] = 1e2;
-    Gamma = 1.4;
-  }
+  //if(x < 0.1) {
+    //v[0] = 1;
+    //v[1] = 0;
+    //v[2] = 1e3;
+    //Gamma = 1.4;
+  //}
+  //else if(x < 0.9){
+    //v[0] = 1;
+    //v[1] = 0;
+    //v[2] = 1e-2;
+    //Gamma = 1.4;
+  //}
+  //else {
+    //v[0] = 1;
+    //v[1] = 0;
+    //v[2] = 1e2;
+    //Gamma = 1.4;
+  //}
 
   return v;
 }
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
   u_int Nx = atoi(argv[1]);
   double CFL = atof(argv[2]);
 
-  SCL1D<bU> Q(Nx, t_start, t_end, x_start, x_end, initial, CFL);
+  Lagranian1D Q(Nx, t_start, t_end, x_start, x_end, initial, CFL);
   std::cout << "Initialization completed ..." << std::endl;
   double t1 = omp_get_wtime();
   std::cout << "Start to solve ..." << std::endl;
