@@ -33,4 +33,3 @@ void Lagranian1D::move_mesh(double dt) {
   }
 }
 
-

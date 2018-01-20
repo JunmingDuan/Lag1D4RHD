@@ -26,19 +26,19 @@ class GHOST {
 };
 
 class Lagranian1D {
-	private:
-		typedef bU (*Lfun)(const double t, const double x, double& gamma);
-		typedef bU (*NLfun)(bU u, double t, double x);
-		typedef vvector<bU> Sol;
-		u_int N_x;
-		double t_start;
-		double t_end;
-		double x_start;
-		double x_end;
-		Lfun initial;
-		double CFL;
-		Sol Con;//数值解,conservative variables
-		Sol Pri;//数值解,primitive variables
+  private:
+    typedef bU (*Lfun)(const double t, const double x, double& gamma);
+    typedef bU (*NLfun)(bU u, double t, double x);
+    typedef vvector<bU> Sol;
+    u_int N_x;
+    double t_start;
+    double t_end;
+    double x_start;
+    double x_end;
+    Lfun initial;
+    double CFL;
+    Sol Con;//数值解,conservative variables
+    Sol Pri;//数值解,primitive variables
     vvector<double> Di;
     vvector<double> mesh;
     vvector<double> Gamma;
@@ -46,8 +46,8 @@ class Lagranian1D {
     Sol FLUX;
     GHOST ghostl, ghostr;
 
-	public:
-		Lagranian1D(u_int Nx, double t_start, double t_end, double x_start, double x_end,
+  public:
+    Lagranian1D(u_int Nx, double t_start, double t_end, double x_start, double x_end,
         Lfun initial, double CFL = 0.5)
       : N_x(Nx), t_start(t_start), t_end(t_end), x_start(x_start), x_end(x_end),
       initial(initial), CFL(CFL) {
@@ -83,8 +83,8 @@ class Lagranian1D {
     }
 
     double fp(const bU& U, double p, const double Gamma);
-   double fpp(const bU& U, double p, const double Gamma);
-   /**
+    double fpp(const bU& U, double p, const double Gamma);
+    /**
      * @brief Con2Pri solve (rho,u,p) from (D, m, E)
      *
      * @param U conservative variables (D, m, E)
@@ -115,38 +115,37 @@ class Lagranian1D {
     void cal_flux_LF(double alpha);
     void forward_LF(double dt, double alpha);
 
-    bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar);
-    void cal_flux_HLLC(double alpha);
+    bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar, double&);
+    void cal_flux_HLLC();
     void forward_HLLC(double dt, double alpha);
 
     void cal_us_roeav();
     void move_mesh(double dt);
 
   public:
-		void Solve() {
+    void Solve() {
       double t_now(t_start), dt(0), alpha(0);
-			Initial();
+      Initial();
 
       int n = 0;
       while(t_now < t_end - 1e-10) {
-      //while( n < 1 ) {
+        //while( n < 1 ) {
         dt = t_step(CFL, alpha);
         if(dt + t_now > t_end) dt = t_end - t_now;
 
-        LF(Con[0], Con[1], Pri[0], Pri[1], 1);
         //forward_LF(dt, alpha);
-        //forward_HLLC(dt, alpha);
+        forward_HLLC(dt, alpha);
 
         t_now += dt;
         std::cout << "t: " << t_now << " , dt: " << dt << std::endl;
         n ++ ;
       }
-		}
+    }
 
     void print_con(std::ostream& os);
     void print_pri(std::ostream& os);
     void print_rupe(std::ostream& os);
-		friend std::ostream& operator<<(std::ostream&, const Lagranian1D&);
+    friend std::ostream& operator<<(std::ostream&, const Lagranian1D&);
 };
 
 #endif
