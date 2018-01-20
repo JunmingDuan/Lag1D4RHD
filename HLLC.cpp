@@ -11,13 +11,17 @@ bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& P
   csl = sqrt(Gammal*PRIL[2]/PRIL[0]/hl);
   //std::cout << "hl,p,rho: " << hl << " " << PRIL[2] << " " << PRIL[0] << std::endl;
   ul = PRIL[1];
-  lam1 = -(1-ul*ul)*csl/(1-ul*csl);//negative speed
-  lam2 = (1-ul*ul)*csl/(1+ul*csl);//positive speed
+  lam1 = ul-(1-ul*ul)*csl/(1-ul*csl);//negative speed
+  lam2 = ul+(1-ul*ul)*csl/(1+ul*csl);//positive speed
+  //lam1 = -(1-ul*ul)*csl/(1-ul*csl);//negative speed
+  //lam2 = +(1-ul*ul)*csl/(1+ul*csl);//positive speed
   hr = 1+PRIR[2]/PRIR[0]*Gammar/(Gammar-1);
   csr = sqrt(Gammar*PRIR[2]/PRIR[0]/hr);
   ur = PRIR[1];
-  lam3 = -(1-ur*ur)*csr/(1-ur*csr);//negative speed
-  lam4 = (1-ur*ur)*csr/(1+ur*csr);//positive speed
+  lam3 = ur-(1-ur*ur)*csr/(1-ur*csr);//negative speed
+  lam4 = ur+(1-ur*ur)*csr/(1+ur*csr);//positive speed
+  //lam3 = -(1-ur*ur)*csr/(1-ur*csr);//negative speed
+  //lam4 = +(1-ur*ur)*csr/(1+ur*csr);//positive speed
   SL = std::min((lam1), (lam3));//left characteristic speed
   SR = std::max((lam2), (lam4));//right characteristic speed
   //roe_average of ul, ur
@@ -32,9 +36,10 @@ bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& P
   //S2 = std::max(vr+cr, ci);
 
   //std::cout << "left and right speed: " << SL << " " << SR << std::endl;
-  if(SL > 0) { return F(CONL, PRIL); }
-  else if(SR < 0) {  return F(CONR, PRIR); }
-  else {
+  //if(SL > 0) { return F(CONL, PRIL); }
+  //else if(SR < 0) {  return F(CONR, PRIR); }
+  //else {
+  {
     //cal S^* and p^*, S^* is the smaller root of a quadric equation:
     //F_E^{hll} x^2 - (E^{hll}+F^{hll}_m) x + m^{hll} = 0
     double coe1 = SR*CONL[1] - SL*CONR[1] + SL*SR*(CONR[2] - CONL[2]);
@@ -57,7 +62,7 @@ bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& P
   }
 }
 
-void Lagranian1D::cal_flux_HLLC() {
+void Lagranian1D::cal_flux_HLLC(Sol& Con, Sol& Pri) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     if(i == 0) FLUX[i] = HLLC(ghostl.Con, Con[i], ghostl.Pri, Pri[i], ghostl.Gamma, Gamma[i], us[i]);
@@ -68,15 +73,16 @@ void Lagranian1D::cal_flux_HLLC() {
   }
 }
 
-void Lagranian1D::forward_HLLC(double dt, double alpha) {
-  InfiniteBD();
-  cal_us_roeav();
-  cal_flux_HLLC();
+void Lagranian1D::forward_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt,
+    Sol& Con1, Sol& Pri1, vvector<double>& mesh1) {
+  InfiniteBD(Con, Pri);
+  cal_flux_HLLC(Con, Pri);
+  cal_us_roeav(Con, Pri, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x; ++i) {
-    Con[i] *= (mesh[i+1]-mesh[i]);
+    Con1[i] *= (mesh[i+1]-mesh[i]);
   }
-  move_mesh(dt);
+  move_mesh(mesh, us, dt, mesh1);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x; ++i) {
     Con[i] = (Con[i] - dt*(FLUX[i+1] - FLUX[i])) / (mesh[i+1]-mesh[i]);

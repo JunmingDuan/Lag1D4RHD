@@ -73,7 +73,7 @@ class Lagranian1D {
       }
     }
 
-    void InfiniteBD() {
+    void InfiniteBD(Sol& Con, Sol& Pri) {
       ghostl.Con = Con[0];
       ghostl.Pri = Pri[0];
       ghostr.Con = Con[N_x-1];
@@ -116,11 +116,22 @@ class Lagranian1D {
     void forward_LF(double dt, double alpha);
 
     bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar, double&);
-    void cal_flux_HLLC();
-    void forward_HLLC(double dt, double alpha);
+    void cal_flux_HLLC(Sol& Con, Sol& Pri);
+    void forward_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt,
+        Sol& Con1, Sol& Pri1, vvector<double>& mesh1);
 
-    void cal_us_roeav();
+    void cal_us_roeav(Sol& Con, Sol& Pri, vvector<double>& us);
     void move_mesh(double dt);
+
+    //void SSP_RK(const double dt) {
+      //vvector<double> mesh_n(mesh);
+      stage 1
+      //forward_HLLC(dt);
+      stage 2
+      //forward_HLLC(dt);
+      stage 3
+      //forward_HLLC(dt);
+    //}
 
   public:
     void Solve() {
@@ -128,13 +139,14 @@ class Lagranian1D {
       Initial();
 
       int n = 0;
-      while(t_now < t_end - 1e-10) {
+      while(t_now < t_end) {
         //while( n < 1 ) {
         dt = t_step(CFL, alpha);
-        if(dt + t_now > t_end) dt = t_end - t_now;
+        //std::cout << "dt, t_end-t_now: " << dt << " " << t_end-t_now << std::endl;
+        dt = std::min(dt, t_end-t_now);
 
         //forward_LF(dt, alpha);
-        forward_HLLC(dt, alpha);
+        forward_HLLC(Con, Pri, mesh, dt, Con, Pri);
 
         t_now += dt;
         std::cout << "t: " << t_now << " , dt: " << dt << std::endl;
