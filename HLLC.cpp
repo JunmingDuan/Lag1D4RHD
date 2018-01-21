@@ -1,8 +1,7 @@
 #include "Lagranian1D.h"
 
 bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar, double& SM) {
-  double SL, SR, ui, ci, vl, vr;
-  double srhol, srhor;
+  double SL, SR;//, ui, ci, vl, vr;
   double hl, csl, ul, hr, csr, ur;
   double lam1, lam2, lam3, lam4;
 
@@ -52,7 +51,6 @@ bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& P
     if(fabs(coe1) < 1e-10) SM = coe3/coe2;
     else SM = (coe2 - sqrt(coe2*coe2 - 4.*coe1*coe3))/2./coe1;
     PM = (SM*(SL*CONL[2]-CONL[1]) + PRIL[2] - CONL[1]*(SL-PRIL[1])) / (1+SL*SM);
-    //std::cout << "star wave" << std::endl;
     bU F;
     F[0] = 0;
     F[1] = PM;
@@ -62,64 +60,13 @@ bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& P
   }
 }
 
-void Lagranian1D::cal_flux_HLLC(Sol& Con, Sol& Pri) {
+void Lagranian1D::cal_flux_HLLC(Sol& Con, Sol& Pri, Sol& FLUX) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     if(i == 0) FLUX[i] = HLLC(ghostl.Con, Con[i], ghostl.Pri, Pri[i], ghostl.Gamma, Gamma[i], us[i]);
     else if(i == N_x) FLUX[i] = HLLC(Con[i-1], ghostr.Con, Pri[i-1], ghostr.Pri, Gamma[i-1], ghostr.Gamma, us[i]);
     else {
       FLUX[i] = HLLC(Con[i-1], Con[i], Pri[i-1], Pri[i], Gamma[i-1], Gamma[i], us[i]);
-    }
-  }
-}
-
-void Lagranian1D::forward_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt,
-    Sol& Con1, Sol& Pri1, vvector<double>& mesh1) {
-  InfiniteBD(Con, Pri);
-  cal_flux_HLLC(Con, Pri);
-  cal_us_roeav(Con, Pri, us);
-#pragma omp parallel for num_threads(Nthread)
-  for(u_int i = 0; i < N_x; ++i) {
-    Con1[i] *= (mesh[i+1]-mesh[i]);
-  }
-  move_mesh(mesh, us, dt, mesh1);
-#pragma omp parallel for num_threads(Nthread)
-  for(u_int i = 0; i < N_x; ++i) {
-    Con[i] = (Con[i] - dt*(FLUX[i+1] - FLUX[i])) / (mesh[i+1]-mesh[i]);
-    if(Con[i][0] != Con[i][0]) {
-      std::cout << "NAN, D: " << Con[i][0] << std::endl;
-      std::cout << "i: " << i << std::endl;
-      abort();
-    }
-    if(Con[i][1] != Con[i][1]) {
-      std::cout << "NAN, m: " << Con[i][1] << std::endl;
-      std::cout << "i: " << i << std::endl;
-      abort();
-    }
-    if(Con[i][2] != Con[i][2]) {
-      std::cout << "NAN, E: " << Con[i][2] << std::endl;
-      std::cout << "i: " << i << std::endl;
-      abort();
-    }
-  }
-#pragma omp parallel for num_threads(Nthread)
-  for(u_int i = 0; i < N_x; ++i) {
-    Pri[i] = Con2Pri(Con[i], Gamma[i]);
-    if(Pri[i][2] != Pri[i][2]) {
-      std::cout << "NAN, p: " << Pri[i][2] << std::endl;
-      std::cout << "i: " << i << std::endl;
-      abort();
-    }
-    if(Pri[i][1] != Pri[i][1]) {
-      std::cout << "NAN, u: " << Pri[i][1] << std::endl;
-      std::cout << "i: " << i << std::endl;
-      abort();
-    }
-    if(Pri[i][0] != Pri[i][0]) {
-      std::cout << "NAN, r: " << Pri[i][0] << std::endl;
-      std::cout << "i: " << i << std::endl;
-      std::cout << "u: " << Pri[i][1] << std::endl;
-      abort();
     }
   }
 }

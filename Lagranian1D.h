@@ -58,10 +58,10 @@ class Lagranian1D {
         Gamma.assign(N_x, 0);
         us.assign(N_x+1, 0);
         FLUX.resize(N_x+1);
-        double h = (x_end - x_start) / N_x;
+        double h0 = (x_end - x_start) / N_x;
 #pragma omp parallel for num_threads(Nthread)
         for(u_int i = 0; i < N_x+1; ++i) {
-          mesh[i] = h*i;
+          mesh[i] = h0*i;
         }
       }
 
@@ -112,47 +112,24 @@ class Lagranian1D {
     bU F(const bU& CON, const bU& PRI);
 
     bU LF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha);
-    void cal_flux_LF(double alpha);
-    void forward_LF(double dt, double alpha);
+    void cal_flux_LF(Sol& Con, Sol& Pri, Sol& FLUX, double alpha);
 
     bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar, double&);
-    void cal_flux_HLLC(Sol& Con, Sol& Pri);
-    void forward_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt,
-        Sol& Con1, Sol& Pri1, vvector<double>& mesh1);
+    void cal_flux_HLLC(Sol& Con, Sol& Pri, Sol& FLUX);
 
     void cal_us_roeav(Sol& Con, Sol& Pri, vvector<double>& us);
-    void move_mesh(double dt);
+    void move_mesh(vvector<double>&, vvector<double>&, double dt, vvector<double>&);
 
-    //void SSP_RK(const double dt) {
-      //vvector<double> mesh_n(mesh);
-      stage 1
-      //forward_HLLC(dt);
-      stage 2
-      //forward_HLLC(dt);
-      stage 3
-      //forward_HLLC(dt);
-    //}
+    void Euler_forward_LF(double dt, double alpha);
+    void Euler_forward_HLLC(const double dt);
+    void SSP_RK_LF(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt, double alpha);
+    void SSP_RK_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt);
 
   public:
-    void Solve() {
-      double t_now(t_start), dt(0), alpha(0);
-      Initial();
+    void Solver();
 
-      int n = 0;
-      while(t_now < t_end) {
-        //while( n < 1 ) {
-        dt = t_step(CFL, alpha);
-        //std::cout << "dt, t_end-t_now: " << dt << " " << t_end-t_now << std::endl;
-        dt = std::min(dt, t_end-t_now);
-
-        //forward_LF(dt, alpha);
-        forward_HLLC(Con, Pri, mesh, dt, Con, Pri);
-
-        t_now += dt;
-        std::cout << "t: " << t_now << " , dt: " << dt << std::endl;
-        n ++ ;
-      }
-    }
+    void update_sol(vvector<double>& mesh, Sol& Con, Sol& Pri, Sol& FLUX, const double dt,
+        vvector<double>& mesh1, Sol& Con1, Sol& Pri1);
 
     void print_con(std::ostream& os);
     void print_pri(std::ostream& os);

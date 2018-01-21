@@ -92,4 +92,13 @@ bU Lagranian1D::F(const bU& CON, const bU& PRI) {
   return tmp;
 }
 
+void Lagranian1D::update_sol(vvector<double>& mesh, Sol& Con, Sol& Pri, Sol& FLUX, const double dt,
+    vvector<double>& mesh1, Sol& Con1, Sol& Pri1) {
+#pragma omp parallel for num_threads(Nthread)
+  for(u_int i = 0; i < N_x; ++i) {
+    Con1[i] = (Con[i]*(mesh[i+1]-mesh[i]) - dt*(FLUX[i+1] - FLUX[i])) / (mesh1[i+1]-mesh1[i]);
+    Pri1[i] = Con2Pri(Con1[i], Gamma[i]);
+  }
+}
+
 

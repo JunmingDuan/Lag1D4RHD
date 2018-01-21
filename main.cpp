@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
   std::cout << "Initialization completed ..." << std::endl;
   double t1 = omp_get_wtime();
   std::cout << "Start to solve ..." << std::endl;
-  Q.Solve();
+  Q.Solver();
   double t2 = omp_get_wtime();
 
   std::ofstream outfile("sol.dat",std::ios::out);

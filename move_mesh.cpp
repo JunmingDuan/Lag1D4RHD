@@ -1,6 +1,6 @@
 #include "Lagranian1D.h"
 
-void Lagranian1D::cal_us_roeav() {
+void Lagranian1D::cal_us_roeav(Sol& Con, Sol& Pri, vvector<double>& us) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     double srhol, srhor, ul, ur;
@@ -26,10 +26,10 @@ void Lagranian1D::cal_us_roeav() {
   us[N_x] = 0;
 }
 
-void Lagranian1D::move_mesh(double dt) {
+void Lagranian1D::move_mesh(vvector<double>& mesh, vvector<double>& us, double dt, vvector<double>& mesh1) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
-    mesh[i] += dt * us[i];
+    mesh1[i] = mesh[i] + dt * us[i];
   }
 }
 
