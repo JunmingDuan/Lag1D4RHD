@@ -51,13 +51,29 @@ bU Lagranian1D::Con2Pri(const bU& U, const double Gamma) {
   //solve a nonlinear equation by Newton method to obtain pressure p
   u_int ite(0), MAXITE(20);
   double eps = 1e-15;
-  double p(0), p1(p), y(fp(U,p, Gamma));
+  double a = 0, b = (Gamma-1)*U[2];
+  double p(0.5*b), p1(p), y(fp(U,p, Gamma));
   while(fabs(y) > eps && ite < MAXITE) {
-    p1 = p - y/fpp(U, p, Gamma);
-    y = fp(U, p1, Gamma);
-    ite++;
-    if(fabs(p1-p) < eps) { p = p1; break; }
-    p = p1;
+    if(p < a) {
+      p1 = (p + b)/2.0;
+      y = fp(U, p1, Gamma);
+      p = p1;
+      continue;
+    }
+    else if(p > b) {
+      p1 = (p + a)/2.0;
+      y = fp(U, p1, Gamma);
+      p = p1;
+      continue;
+    }
+    else {
+      p1 = p - y/fpp(U, p, Gamma);
+      y = fp(U, p1, Gamma);
+      ite++;
+      if(fabs(p1-p) < eps) { p = p1; break; }
+      p = p1;
+
+    }
   }
   //std::cout << ite << " " << y << std::endl;
   prim[2] = p;

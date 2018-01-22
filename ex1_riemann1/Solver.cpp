@@ -13,9 +13,9 @@ void Lagranian1D::Solver() {
 
     //Euler_forward_LF(dt, alpha);
     //Euler_forward_LLF(dt);
-    Euler_forward_HLLC(dt);
+    //Euler_forward_HLLC(dt);
     //SSP_RK_LF(Con, Pri, mesh, dt, alpha);
-    //SSP_RK_HLLC(Con, Pri, mesh, dt);
+    SSP_RK_HLLC(Con, Pri, mesh, dt);
 
     t_now += dt;
     std::cout << "t: " << t_now << " , dt: " << dt << std::endl;

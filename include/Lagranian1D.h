@@ -39,6 +39,8 @@ class Lagranian1D {
     double CFL;
     Sol Con;//数值解,conservative variables
     Sol Pri;//数值解,primitive variables
+    Sol ReconL_Con, ReconR_Con;//重构守恒变量,x_{i+\frac12}处左右极限值
+    Sol ReconL_Pri, ReconR_Pri;//重构原始变量,x_{i+\frac12}处左右极限值
     vvector<double> Di;
     vvector<double> mesh;
     vvector<double> Gamma;
@@ -54,6 +56,10 @@ class Lagranian1D {
       initial(initial), CFL(CFL) {
         Con.resize(N_x);
         Pri.resize(N_x);
+        ReconL_Con.resize(N_x+1);//边界加上了
+        ReconR_Con.resize(N_x+1);
+        ReconL_Pri.resize(N_x+1);//边界加上了
+        ReconR_Pri.resize(N_x+1);
         Di.resize(N_x);
         mesh.assign(N_x+1, 0);
         Gamma.assign(N_x, 0);
@@ -118,6 +124,9 @@ class Lagranian1D {
 
     void cal_us_roeav(Sol& Con, Sol& Pri, vvector<double>& us);
     void move_mesh(vvector<double>&, vvector<double>&, double dt, vvector<double>&);
+
+    void Reconstruction(const Sol&, const bU&, const bU&,//待重构变量和两个边界
+        Sol&, Sol&, Sol&, Sol&);//重构得到的守恒变量和原始变量
 
     void Euler_forward_LF(double dt, double alpha);
     void Euler_forward_LLF(double dt);

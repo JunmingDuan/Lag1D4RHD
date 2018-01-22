@@ -26,9 +26,14 @@ bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& P
         + SR*CONR[2] - SL*CONL[2] + CONL[1] - CONR[1] );
     double coe3 = SR*CONR[1] - SL*CONL[1] + CONL[1]*PRIL[1]+PRIL[2] - CONR[1]*PRIR[1]-PRIR[2];
     double PM;
-    if(fabs(coe1) < 1e-10) SM = coe3/coe2;
+    if(fabs(coe1) < 1e-15) SM = coe3/coe2;
+    else if(fabs(coe1*coe3) < 1e-15) SM = 0;
     else SM = (coe2 - sqrt(coe2*coe2 - 4.*coe1*coe3))/2./coe1;
-    PM = (SM*(SL*CONL[2]-CONL[1]) + PRIL[2] - CONL[1]*(SL-PRIL[1])) / (1+SL*SM);
+    PM = (SM*(SL*CONL[2]-CONL[1]) + PRIL[2] - CONL[1]*(SL-PRIL[1])) / (1-SL*SM);
+    //std::cout.setf(std::ios::scientific);
+    //std::cout.precision(16);
+    //std::cout << coe1 << " " << coe2 << " " << coe3 << " " << (SM*(SL*CONL[2]-CONL[1]) + PRIL[2] - CONL[1]*(SL-PRIL[1])) / (1-SL*SM) -
+    //(SM*(SR*CONR[2]-CONR[1]) + PRIR[2] - CONR[1]*(SR-PRIR[1])) / (1-SR*SM) << std::endl;
     bU F;
     F[0] = 0;
     F[1] = PM;

@@ -108,7 +108,9 @@ void Lagranian1D::SSP_RK_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const d
   Sol Con_n(Con), Pri_n(Pri);
   //stage 1
   InfiniteBD(Con_n, Pri_n);
-  cal_flux_HLLC(Con_n, Pri_n, FLUX, us);
+  Reconstruction(Con_n, ghostl.Con, ghostr.Con, ReconL, ReconR);
+  cal_flux_HLLC(ConL, ConR, PriL, PriR, FLUX, us);
+  cal_flux_HLLC(ReconL, ReconR, FLUX, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh[i] = mesh[i] + dt * us[i];
