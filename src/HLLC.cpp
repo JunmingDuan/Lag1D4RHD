@@ -42,15 +42,16 @@ bU Lagranian1D::HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& P
   }
 }
 
-void Lagranian1D::cal_flux_HLLC(Sol& Con, Sol& Pri, Sol& FLUX,
-    vvector<double>& us) {
+void Lagranian1D::cal_flux_HLLC(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri,
+    Sol& FLUX, vvector<double>& us) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
-    if(i == 0) FLUX[i] = HLLC(ghostl.Con, Con[i], ghostl.Pri, Pri[i], ghostl.Gamma, Gamma[i], us[i]);
-    else if(i == N_x) FLUX[i] = HLLC(Con[i-1], ghostr.Con, Pri[i-1], ghostr.Pri, Gamma[i-1], ghostr.Gamma, us[i]);
-    else {
-      FLUX[i] = HLLC(Con[i-1], Con[i], Pri[i-1], Pri[i], Gamma[i-1], Gamma[i], us[i]);
-    }
+    if(i == 0) FLUX[i] = HLLC(ReconL_Con[i], ReconR_Con[i], ReconL_Pri[i], ReconR_Pri[i],
+        Gamma[0], Gamma[i], us[i]);
+    else if(i == N_x) FLUX[i] = HLLC(ReconL_Con[i], ReconR_Con[i], ReconL_Pri[i], ReconR_Pri[i],
+        Gamma[i-1], Gamma[N_x-1], us[i]);
+    else FLUX[i] = HLLC(ReconL_Con[i], ReconR_Con[i], ReconL_Pri[i], ReconR_Pri[i],
+        Gamma[i-1], Gamma[i], us[i]);
   }
 }
 

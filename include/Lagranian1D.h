@@ -30,6 +30,7 @@ class Lagranian1D {
     typedef bU (*Lfun)(const double t, const double x, double& gamma);
     typedef bU (*NLfun)(bU u, double t, double x);
     typedef vvector<bU> Sol;
+    typedef vvector<double> VEC;
     u_int N_x;
     double t_start;
     double t_end;
@@ -41,11 +42,11 @@ class Lagranian1D {
     Sol Pri;//数值解,primitive variables
     Sol ReconL_Con, ReconR_Con;//重构守恒变量,x_{i+\frac12}处左右极限值
     Sol ReconL_Pri, ReconR_Pri;//重构原始变量,x_{i+\frac12}处左右极限值
-    vvector<double> Di;
-    vvector<double> mesh;
-    vvector<double> Gamma;
-    vvector<double> us;
-    vvector<double> cs;
+    VEC Di;
+    VEC mesh;
+    VEC Gamma;
+    VEC us;
+    VEC cs;
     Sol FLUX;
     GHOST ghostl, ghostr;
 
@@ -81,11 +82,11 @@ class Lagranian1D {
       }
     }
 
-    void InfiniteBD(Sol& Con, Sol& Pri) {
+    void InfiniteBD(Sol& Con) {
       ghostl.Con = Con[0];
-      ghostl.Pri = Pri[0];
+      ghostl.Pri = Con2Pri(Con[0], Gamma[0]);
       ghostr.Con = Con[N_x-1];
-      ghostr.Pri = Pri[N_x-1];
+      ghostr.Pri = Con2Pri(Con[N_x-1], Gamma[N_x-1]);
       ghostl.Gamma = Gamma[0];
       ghostr.Gamma = Gamma[N_x-1];
     }
@@ -103,7 +104,7 @@ class Lagranian1D {
     bU Con2Pri(const bU& U, const double Gamma);
     bU Pri2Con(const bU& U, const double Gamma);
     double cal_cs(const bU& Con, const bU& Pri, const double Gamma);
-    void update_cs(vvector<double>&);
+    void update_cs(VEC&);
     double cal_max_lambda_Lag(int i);
     double cal_max_lambda_Eul(int i);
     double cal_max_lambda_Lag(const bU& Con, const bU& Pri, const double Gamma);
@@ -114,37 +115,41 @@ class Lagranian1D {
     bU F(const bU& CON, const bU& PRI);
 
     bU LF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha);
-    void cal_flux_LF(Sol& Con, Sol& Pri, Sol& FLUX, double alpha);
+    void cal_flux_LF(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri, Sol& FLUX, double alpha);
 
     bU LLF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha);
-    void cal_flux_LLF(Sol& Con, Sol& Pri, Sol& FLUX);
+    void cal_flux_LLF(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri, Sol& FLUX);
 
     bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar, double&);
-    void cal_flux_HLLC(Sol& Con, Sol& Pri, Sol& FLUX, vvector<double>& us);
+    void cal_flux_HLLC(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri,
+        Sol& FLUX, VEC& us);
 
-    void cal_us_roeav(Sol& Con, Sol& Pri, vvector<double>& us);
-    void move_mesh(vvector<double>&, vvector<double>&, double dt, vvector<double>&);
+    void cal_us_roeav(Sol& ReconL_Pri, Sol& ReconR_Pri, VEC& us);
+    void move_mesh(VEC&, VEC&, double dt, VEC&);
 
-    void Reconstruction(const Sol&, const bU&, const bU&,//待重构变量和两个边界
+    void Reconstruction(const Sol&, const VEC&,//待重构变量
         Sol&, Sol&, Sol&, Sol&);//重构得到的守恒变量和原始变量
 
-    void Euler_forward_LF(double dt, double alpha);
-    void Euler_forward_LLF(double dt);
-    void Euler_forward_HLLC(const double dt);
+    void Euler_forward_LF(double dt, double alpha, VEC& mesh);
+    void Euler_forward_LLF(double dt, VEC& mesh);
+    void Euler_forward_HLLC(const double dt, VEC& mesh);
 
-    void SSP_RK_LF(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt, double alpha);
-    void SSP_RK_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt);
+    void RK2_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt, double alpha);
+
+    void SSP_RK_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt, double alpha);
+    void SSP_RK_HLLC(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
 
   public:
     void Solver();
 
-    void update_sol(vvector<double>& mesh, Sol& Con, Sol& Pri, Sol& FLUX, const double dt,
-        vvector<double>& mesh1, Sol& Con1, Sol& Pri1);
+    void update_sol(VEC& mesh, Sol& Con, Sol& Pri, Sol& FLUX, const double dt,
+        VEC& mesh1, Sol& Con1, Sol& Pri1);
 
     void print_con(std::ostream& os);
     void print_pri(std::ostream& os);
     void print_rupe(std::ostream& os);
     friend std::ostream& operator<<(std::ostream&, const Lagranian1D&);
+
 };
 
 #endif

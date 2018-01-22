@@ -1,8 +1,8 @@
 #include "Lagranian1D.h"
 
-void Lagranian1D::Euler_forward_LF(double dt, double alpha) {
-  InfiniteBD(Con, Pri);
-  cal_flux_LF(Con, Pri, FLUX, alpha);
+void Lagranian1D::Euler_forward_LF(double dt, double alpha, VEC& mesh) {
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_LF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, alpha);
   cal_us_roeav(Con, Pri, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x; ++i) {
@@ -19,10 +19,10 @@ void Lagranian1D::Euler_forward_LF(double dt, double alpha) {
   }
 }
 
-void Lagranian1D::Euler_forward_LLF(double dt) {
-  InfiniteBD(Con, Pri);
+void Lagranian1D::Euler_forward_LLF(double dt, VEC& mesh) {
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_LLF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX);
   cal_us_roeav(Con, Pri, us);
-  cal_flux_LLF(Con, Pri, FLUX);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x; ++i) {
     Con[i] *= (mesh[i+1]-mesh[i]);
@@ -38,9 +38,9 @@ void Lagranian1D::Euler_forward_LLF(double dt) {
   }
 }
 
-void Lagranian1D::Euler_forward_HLLC(const double dt) {
-  InfiniteBD(Con, Pri);
-  cal_flux_HLLC(Con, Pri, FLUX, us);
+void Lagranian1D::Euler_forward_HLLC(const double dt, VEC& mesh) {
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_HLLC(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x; ++i) {
     Con[i] *= (mesh[i+1]-mesh[i]);
@@ -56,13 +56,21 @@ void Lagranian1D::Euler_forward_HLLC(const double dt) {
   }
 }
 
-void Lagranian1D::SSP_RK_LF(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt, double alpha) {
-  vvector<double> mesh_n(mesh), mesh1(N_x+1);
+void Lagranian1D::SSP_RK_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt, double alpha) {
+  VEC mesh_n(mesh), mesh1(N_x+1);
   Sol Con_n(Con), Pri_n(Pri);
   //stage 1
-  InfiniteBD(Con_n, Pri_n);
-  cal_flux_LF(Con_n, Pri_n, FLUX, alpha);
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_LF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, alpha);
   cal_us_roeav(Con_n, Pri_n, us);
+  std::cout << "Con\n" << Con << std::endl;
+  std::cout << "Pri\n" << Pri << std::endl;
+  std::cout << "ReconL_Con\n" << ReconL_Con << std::endl;
+  std::cout << "ReconR_Con\n" << ReconR_Con << std::endl;
+  std::cout << "ReconL_Pri\n" << ReconL_Pri << std::endl;
+  std::cout << "ReconR_Pri\n" << ReconR_Pri << std::endl;
+  std::cout << "FLUX\n" << FLUX << std::endl;
+  //abort();
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh[i] = mesh[i] + dt * us[i];
@@ -73,8 +81,8 @@ void Lagranian1D::SSP_RK_LF(Sol& Con, Sol& Pri, vvector<double>& mesh, const dou
     Pri[i] = Con2Pri(Con[i], Gamma[i]);
   }
   //stage 2
-  InfiniteBD(Con, Pri);
-  cal_flux_LF(Con, Pri, FLUX, alpha);
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_LF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, alpha);
   cal_us_roeav(Con, Pri, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
@@ -87,8 +95,8 @@ void Lagranian1D::SSP_RK_LF(Sol& Con, Sol& Pri, vvector<double>& mesh, const dou
     Pri[i] = Con2Pri(Con[i], Gamma[i]);
   }
   //stage 3
-  InfiniteBD(Con, Pri);
-  cal_flux_LF(Con, Pri, FLUX, alpha);
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_LF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, alpha);
   cal_us_roeav(Con, Pri, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
@@ -103,14 +111,12 @@ void Lagranian1D::SSP_RK_LF(Sol& Con, Sol& Pri, vvector<double>& mesh, const dou
 
 }
 
-void Lagranian1D::SSP_RK_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const double dt) {
-  vvector<double> mesh_n(mesh), mesh1(N_x+1);
+void Lagranian1D::SSP_RK_HLLC(Sol& Con, Sol& Pri, VEC& mesh, const double dt) {
+  VEC mesh_n(mesh), mesh1(N_x+1);
   Sol Con_n(Con), Pri_n(Pri);
   //stage 1
-  InfiniteBD(Con_n, Pri_n);
-  Reconstruction(Con_n, ghostl.Con, ghostr.Con, ReconL, ReconR);
-  cal_flux_HLLC(ConL, ConR, PriL, PriR, FLUX, us);
-  cal_flux_HLLC(ReconL, ReconR, FLUX, us);
+  Reconstruction(Con_n, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_HLLC(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh[i] = mesh[i] + dt * us[i];
@@ -121,8 +127,8 @@ void Lagranian1D::SSP_RK_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const d
     Pri[i] = Con2Pri(Con[i], Gamma[i]);
   }
   //stage 2
-  InfiniteBD(Con, Pri);
-  cal_flux_HLLC(Con, Pri, FLUX, us);
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_HLLC(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh1[i] = 0.75*mesh_n[i] + 0.25*(mesh[i] + dt * us[i]);
@@ -134,8 +140,8 @@ void Lagranian1D::SSP_RK_HLLC(Sol& Con, Sol& Pri, vvector<double>& mesh, const d
     Pri[i] = Con2Pri(Con[i], Gamma[i]);
   }
   //stage 3
-  InfiniteBD(Con, Pri);
-  cal_flux_HLLC(Con, Pri, FLUX, us);
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_flux_HLLC(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, us);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh[i] = 1./3*mesh_n[i] + 2./3*(mesh1[i] + dt * us[i]);

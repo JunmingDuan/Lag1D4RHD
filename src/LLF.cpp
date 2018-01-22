@@ -4,29 +4,25 @@ bU Lagranian1D::LLF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PR
   return 0.5*(F(CONL, PRIL) + F(CONR, PRIR)) - 0.5*(CONR-CONL)*alpha;
 }
 
-void Lagranian1D::cal_flux_LLF(Sol& Con, Sol& Pri, Sol& FLUX) {
-  double alpha;
+void Lagranian1D::cal_flux_LLF(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri, Sol& FLUX) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
+    double alpha, laml, lamr;
+    //cal local characteristic speed
     if(i == 0) {
-      //cal local characteristic speed
-      double laml = cal_max_lambda_Lag(ghostl.Con, ghostl.Pri, ghostl.Gamma);
-      double lamr = cal_max_lambda_Lag(i);
-      alpha = std::max(laml, lamr);
-      FLUX[i] = LLF(ghostl.Con, Con[i], ghostl.Pri, Pri[i], alpha);
+      laml = cal_max_lambda_Lag(ReconL_Con[i], ReconL_Pri[i], Gamma[0]);
+      lamr = cal_max_lambda_Lag(ReconR_Con[i], ReconR_Pri[i], Gamma[i]);
     }
     else if(i == N_x) {
-      double laml = cal_max_lambda_Lag(i-1);
-      double lamr = cal_max_lambda_Lag(ghostr.Con, ghostr.Pri, ghostr.Gamma);
-      alpha = std::max(laml, lamr);
-      FLUX[i] = LLF(Con[i-1], ghostr.Con, Pri[i-1], ghostr.Pri, alpha);
+      laml = cal_max_lambda_Lag(ReconL_Con[i], ReconL_Pri[i], Gamma[i-1]);
+      lamr = cal_max_lambda_Lag(ReconR_Con[i], ReconR_Pri[i], Gamma[N_x-1]);
     }
     else {
-      double laml = cal_max_lambda_Lag(i-1);
-      double lamr = cal_max_lambda_Lag(i);
-      alpha = std::max(laml, lamr);
-      FLUX[i] = LLF(Con[i-1], Con[i], Pri[i-1], Pri[i], alpha);
+      laml = cal_max_lambda_Lag(ReconL_Con[i], ReconL_Pri[i], Gamma[i-1]);
+      lamr = cal_max_lambda_Lag(ReconR_Con[i], ReconR_Pri[i], Gamma[i]);
     }
+    alpha = std::max(laml, lamr);
+    FLUX[i] = LLF(ReconL_Con[i], ReconR_Con[i], ReconL_Pri[i], ReconR_Pri[i], alpha);
   }
 }
 

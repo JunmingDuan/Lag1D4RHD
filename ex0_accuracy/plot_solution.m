@@ -6,7 +6,7 @@ u1 = DAT1(:,3);
 p1 = DAT1(:,4);
 e1 = DAT1(:,5);
 
-DAT2 = load('ex1_LF_n100.dat');
+DAT2 = load('ex1_LF_n400.dat');
 x2 = DAT2(:,1);
 rho2 = DAT2(:,2);
 u2 = DAT2(:,3);
@@ -23,14 +23,14 @@ e0 = EX1(:,5);
 %ex1
 figure(1)
 plot(x1, rho1/10, 'or', x2, rho2/10, '-b', x0, rho0/10, '-k');
-legend('Recon', 'unRecon', 'exact');
+legend('sol', 'LLF', 'exact');
 figure(2)
 plot(x1, u1, 'or', x2, u2, '-b', x0, u0, '-k');
-legend('Recon', 'unRecon', 'exact');
+legend('sol', 'LLF', 'exact');
 figure(3)
 plot(x1, p1*3/40, 'or', x2, p2*3/40, '-b', x0, p0*3/40, '-k');
-legend('Recon', 'unRecon', 'exact');
+legend('sol', 'LLF', 'exact');
 figure(4)
 plot(x1, e1, 'or', x2, e2, '-b', x0, e0, '-k');
-legend('Recon', 'unRecon', 'exact');
+legend('sol', 'LLF', 'exact');
 

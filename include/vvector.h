@@ -147,9 +147,6 @@ std::istream& operator>>(std::istream& in, vvector<T>& vv){
 
 template<class T> 
 std::ostream& operator<<(std::ostream& os, const vvector<T>& vv){
-	os.precision(4);
-	os<<std::showpos;
-	os.setf(std::ios::scientific);
 	for(u_int i=0;i!=vv.size();++i){
 		os<<std::setw(15)<<vv[i];
 	}

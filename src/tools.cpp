@@ -46,36 +46,56 @@ double Lagranian1D::fpp(const bU& U, double p, const double Gamma) {
   double gamma2 = 1 - tmp;
   return 1 + U[0]*tmp/Ep/pow(gamma2, 1.5) - Gamma/(Gamma-1)*(gamma2 - 2*p*tmp/Ep)/pow(gamma2,2);
 }
+
+/*bU Lagranian1D::Con2Pri(const bU& U, const double Gamma) {*/
+  //bU prim;
+  ////solve a nonlinear equation by Newton method to obtain pressure p
+  //u_int ite(0), MAXITE(10);
+  //double eps = 1e-15;
+  //double a = 0, b = (Gamma-1)*U[2];
+  //double p(0), p1(p), y(fp(U,p, Gamma));
+  //while(fabs(y) > eps && ite < MAXITE) {
+    //p1 = p - y/fpp(U, p, Gamma);
+    //y = fp(U, p1, Gamma);
+    //ite++;
+    //if(fabs(p1-p) < eps) { p = p1; break; }
+    //p = p1;
+  //}
+  //prim[2] = p;
+  //prim[1] = U[1]/(U[2]+p);
+  //prim[0] = U[0]*sqrt(1-pow(prim[1],2));
+
+  //return prim;
+//}
+
 bU Lagranian1D::Con2Pri(const bU& U, const double Gamma) {
   bU prim;
   //solve a nonlinear equation by Newton method to obtain pressure p
-  u_int ite(0), MAXITE(20);
+  u_int ite(0), MAXITE(10);
   double eps = 1e-15;
   double a = 0, b = (Gamma-1)*U[2];
   double p(0.5*b), p1(p), y(fp(U,p, Gamma));
   while(fabs(y) > eps && ite < MAXITE) {
-    if(p < a) {
-      p1 = (p + b)/2.0;
-      y = fp(U, p1, Gamma);
-      p = p1;
-      continue;
-    }
-    else if(p > b) {
-      p1 = (p + a)/2.0;
-      y = fp(U, p1, Gamma);
-      p = p1;
-      continue;
-    }
-    else {
+    //if(p < a) {
+      //p1 = (p + b)/2.0;
+      //y = fp(U, p1, Gamma);
+      //p = p1;
+      //continue;
+    //}
+    //else if(p > b) {
+      //p1 = (p + a)/2.0;
+      //y = fp(U, p1, Gamma);
+      //p = p1;
+      //continue;
+    //}
+    //else {
       p1 = p - y/fpp(U, p, Gamma);
       y = fp(U, p1, Gamma);
       ite++;
       if(fabs(p1-p) < eps) { p = p1; break; }
       p = p1;
-
-    }
+    //}
   }
-  //std::cout << ite << " " << y << std::endl;
   prim[2] = p;
   prim[1] = U[1]/(U[2]+p);
   prim[0] = U[0]*sqrt(1-pow(prim[1],2));
@@ -94,7 +114,7 @@ bU Lagranian1D::Pri2Con(const bU& U, const double Gamma) {
   return Con;
 }
 
-void Lagranian1D::update_cs(vvector<double>& cs) {
+void Lagranian1D::update_cs(VEC& cs) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x; ++i) {
     cs[i] = cal_cs(Con[i], Pri[i], Gamma[i]);
@@ -141,8 +161,8 @@ bU Lagranian1D::F(const bU& CON, const bU& PRI) {
   return tmp;
 }
 
-void Lagranian1D::update_sol(vvector<double>& mesh, Sol& Con, Sol& Pri, Sol& FLUX, const double dt,
-    vvector<double>& mesh1, Sol& Con1, Sol& Pri1) {
+void Lagranian1D::update_sol(VEC& mesh, Sol& Con, Sol& Pri, Sol& FLUX, const double dt,
+    VEC& mesh1, Sol& Con1, Sol& Pri1) {
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x; ++i) {
     Con1[i] = (Con[i]*(mesh[i+1]-mesh[i]) - dt*(FLUX[i+1] - FLUX[i])) / (mesh1[i+1]-mesh1[i]);
