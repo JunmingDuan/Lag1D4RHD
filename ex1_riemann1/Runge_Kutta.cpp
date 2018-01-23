@@ -17,6 +17,7 @@ void Lagranian1D::Euler_forward_LF(double dt, double alpha, VEC& mesh) {
   for(u_int i = 0; i < N_x; ++i) {
     Pri[i] = Con2Pri(Con[i], Gamma[i]);
   }
+  update_cs(cs);
 }
 
 void Lagranian1D::Euler_forward_LLF(double dt, VEC& mesh) {

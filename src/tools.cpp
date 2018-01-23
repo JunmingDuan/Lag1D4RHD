@@ -176,12 +176,11 @@ double Lagranian1D::t_step(const double CFL, double& alpha) {
   for(u_int i = 0; i < N_x; ++i) {
     hi = mesh[i+1] - mesh[i];
     tmp_lam = cal_max_lambda_Eul(i);
-    if(tmp_lam > alpha) alpha = tmp_lam;
+    alpha = std::max(alpha, tmp_lam);
     tmp_t = hi/alpha;
-    if(tmp_t < a) a = tmp_t;
+    a = std::min(a, tmp_t);
   }
   return CFL*a;
 }
-
 
 

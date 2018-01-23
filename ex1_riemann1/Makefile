@@ -52,8 +52,8 @@ deps : $(DEPS)
 objs : $(OBJS)
 
 clean :
-	@$(RM-F) $(addsuffix /*.o, $(SRCDIR))
-	@$(RM-F) $(addsuffix /*.d, $(SRCDIR))
+	@$(RM-F) $(addsuffix /*.o, $(SRCDIR)) *.d
+	@$(RM-F) $(addsuffix /*.d, $(SRCDIR)) *.o
 veryclean: clean
 	@$(RM-F) $(EXECUTABLE)
 
