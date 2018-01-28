@@ -106,13 +106,17 @@ class Lagranian1D {
     double cal_cs(const bU& Con, const bU& Pri, const double Gamma);
     void update_cs(VEC&);
     double cal_max_lambda_Lag(int i);
+    double cal_max_lambda_Lag();
     double cal_max_lambda_Eul(int i);
     double cal_max_lambda_Lag(const bU& Con, const bU& Pri, const double Gamma);
     double cal_max_lambda_Eul(const bU& Con, const bU& Pri, const double Gamma);
 
+    void CHAR_DECOM(const bU& PRIL, const bU& PRIR, const double, const double, bU& CHARL, bU& CHARR);
+
     double t_step(const double CFL, double& alpha);
 
     bU F(const bU& CON, const bU& PRI);
+    void add_BD_GAMMA(VEC& GAMMAL, VEC& GAMMAR);
 
     bU LF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha);
     void cal_flux_LF(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri, Sol& FLUX, double alpha);
@@ -124,7 +128,7 @@ class Lagranian1D {
     void cal_flux_HLLC(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri,
         Sol& FLUX, VEC& us);
 
-    void cal_us_roeav(Sol& ReconL_Pri, Sol& ReconR_Pri, VEC& us);
+    void cal_us_roeav(Sol& ReconL_Pri, Sol& ReconR_Pri, const VEC&, const VEC&, VEC& us);
     void move_mesh(VEC&, VEC&, double dt, VEC&);
 
     void Reconstruction(const Sol&, const VEC&,//待重构变量
@@ -134,9 +138,9 @@ class Lagranian1D {
     void Euler_forward_LLF(double dt, VEC& mesh);
     void Euler_forward_HLLC(const double dt, VEC& mesh);
 
-    void RK2_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt, double alpha);
+    void RK2_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
 
-    void SSP_RK_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt, double alpha);
+    void SSP_RK_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
     void SSP_RK_HLLC(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
 
   public:

@@ -68,37 +68,38 @@ double Lagranian1D::fpp(const bU& U, double p, const double Gamma) {
   //return prim;
 //}
 
+//solve a nonlinear equation by Newton method to obtain pressure p
 bU Lagranian1D::Con2Pri(const bU& U, const double Gamma) {
   bU prim;
-  //solve a nonlinear equation by Newton method to obtain pressure p
   u_int ite(0), MAXITE(10);
   double eps = 1e-15;
   double a = 0, b = (Gamma-1)*U[2];
   double p(0.5*b), p1(p), y(fp(U,p, Gamma));
   while(fabs(y) > eps && ite < MAXITE) {
-    //if(p < a) {
-      //p1 = (p + b)/2.0;
-      //y = fp(U, p1, Gamma);
-      //p = p1;
-      //continue;
-    //}
-    //else if(p > b) {
-      //p1 = (p + a)/2.0;
-      //y = fp(U, p1, Gamma);
-      //p = p1;
-      //continue;
-    //}
-    //else {
-      p1 = p - y/fpp(U, p, Gamma);
-      y = fp(U, p1, Gamma);
-      ite++;
-      if(fabs(p1-p) < eps) { p = p1; break; }
-      p = p1;
-    //}
+    p1 = p - y/fpp(U, p, Gamma);
+    if(fabs(p1-p) < eps) { p = p1; break; }
+    if(p1 < a) p1 = a;
+    if(p1 > b) p1 = b;
+    y = fp(U, p1, Gamma);
+    p = p1;
+    ite++;
   }
+  if(p < 0 || p != p) {
+    std::cout << U[0] << " " << U[1] << " " << U[2] << std::endl;
+    std::cout << "ite: " << ite << " ; p: " << p << " ; y: " << y << std::endl;
+    std::cout << "derivative: " << fpp(U, 0.5*b, Gamma) << std::endl;
+    //std::cout << "p1: " << 0.5*b - fp(U,0.5*b,Gamma)/fpp(U, 0.5*b, Gamma) << std::endl;
+    std::cout << "f(p1): " << fp(U,p, Gamma) << std::endl;
+    std::cout << U[1]/(U[2]+p) << std::endl;
+    abort();
+  }
+
   prim[2] = p;
   prim[1] = U[1]/(U[2]+p);
   prim[0] = U[0]*sqrt(1-pow(prim[1],2));
+  //std::cout << "ite: " << ite << " ; final p: " << p << std::endl;
+  //std::cout << "rho: " << prim[0] << std::endl;
+  //abort();
 
   return prim;
 }
@@ -153,6 +154,15 @@ double Lagranian1D::cal_max_lambda_Eul
   return fabs(1-u*u)*cs/(1+fabs(u)*cs)+fabs(cs);
 }
 
+double Lagranian1D::cal_max_lambda_Lag() {
+  double tmp, a(0);
+  for(u_int i = 0; i < N_x; ++i) {
+    a = std::max(a, cal_max_lambda_Lag(i));
+  }
+  return a;
+}
+
+
 bU Lagranian1D::F(const bU& CON, const bU& PRI) {
   bU tmp;
   tmp[0] = 0;
@@ -182,5 +192,4 @@ double Lagranian1D::t_step(const double CFL, double& alpha) {
   }
   return CFL*a;
 }
-
 

@@ -1,5 +1,5 @@
 %DAT1 = load('sol.dat');
-DAT1 = load('ex1_LF_n400.dat');
+DAT1 = load('ex1_LF_n400_Lag.dat');
 x1 = DAT1(:,1);
 rho1 = DAT1(:,2);
 u1 = DAT1(:,3);
@@ -12,7 +12,6 @@ rho10 = DAT10(:,2);
 u10 = DAT10(:,3);
 p10 = DAT10(:,4);
 e10 = DAT10(:,5);
-
 
 DAT2 = load('ex1_LLF_n400.dat');
 x2 = DAT2(:,1);
@@ -27,8 +26,6 @@ rho20 = DAT20(:,2);
 u20 = DAT20(:,3);
 p20 = DAT20(:,4);
 e20 = DAT20(:,5);
-
-
 
 DAT3 = load('ex1_HLLC_n400.dat');
 x3 = DAT3(:,1);
