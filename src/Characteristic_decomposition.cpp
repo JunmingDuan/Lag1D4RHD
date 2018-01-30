@@ -1,13 +1,7 @@
 #include "Lagranian1D.h"
 
-void multiply(const bU& x, mvector<mvector<double,3>,3>& M, bU& y) {
-  y[0] = M[0][0]*x[0] + M[0][1]*x[1] + M[0][2]*x[2];
-  y[1] = M[1][0]*x[0] + M[1][1]*x[1] + M[1][2]*x[2];
-  y[2] = M[2][0]*x[0] + M[2][1]*x[1] + M[2][2]*x[2];
-}
-
-void Lagranian1D::CHAR_DECOM(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double GAMMAL, const double GAMMAR,
-    bU& CHARL, bU& CHARR, int flag) {
+void Lagranian1D::ROE_AV_MAT(const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
+    MAT& R, MAT& L) {
     double hl, hr, kl, kr, gl, gr, ul, ur;
     double v0, v1, v2;
     hl = 1 + GAMMAL/(GAMMAL-1)*PRIL[2]/PRIL[0];
@@ -29,25 +23,30 @@ void Lagranian1D::CHAR_DECOM(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const doubl
     double e = -va;
     double y = sqrt((1-GAMMAL*v2)*e + s2);
 
-    mvector<mvector<double,3>,3> R;
-    R[0][0] = cm;          R[0][1] = cm + s2/(GAMMAL-1); R[0][2] = cm;
-    R[1][0] = v0 - s/y*v1; R[1][1] = v0;                 R[1][2] = v0 + s/y*v1;
-    R[2][0] = v1 - s/y*v0; R[2][1] = v1;                 R[2][2] = v1 + s/y*v0;
-
-    mvector<mvector<double,3>,3> L;
-    L[0][0] = (GAMMAL-1)*e;    L[0][1] = s2*v0 - s*y*v1 - (GAMMAL-1)*e*cp*v0; L[0][2] = - s2*v1+s*y*v0 + (GAMMAL-1)*e*cp*v1;
-    L[1][0] = -2*(GAMMAL-1)*e; L[1][1] = -4*s2*v0 + 2*(GAMMAL-1)*e*cp*v0;     L[1][2] = 4*s2*v1 - 2*(GAMMAL-1)*e*cp*v1;
-    L[2][0] = (GAMMAL-1)*e;    L[2][1] = s2*v0 + s*y*v1 - (GAMMAL-1)*e*cp*v0; L[2][2] = - s2*v1-s*y*v0 + (GAMMAL-1)*e*cp*v1;
-    L *= -0.5/e/s2;
-
-    if(flag == 1) {
-      multiply(CONL, R, CHARL);
-      multiply(CONR, R, CHARR);
+    {//right characteristic matrix, R
+      R[0][0] = cm;          R[0][1] = cm + s2/(GAMMAL-1); R[0][2] = cm;
+      R[1][0] = v0 - s/y*v1; R[1][1] = v0;                 R[1][2] = v0 + s/y*v1;
+      R[2][0] = v1 - s/y*v0; R[2][1] = v1;                 R[2][2] = v1 + s/y*v0;
     }
-    else if(flag == -1) {
-      multiply(CHARL, L, CONL);
-      multiply(CHARR, L, CONR);
+    {//left characteristic matrix, L
+      L[0][0] = (GAMMAL-1)*e;    L[0][1] = s2*v0 - s*y*v1 - (GAMMAL-1)*e*cp*v0; L[0][2] = - s2*v1+s*y*v0 + (GAMMAL-1)*e*cp*v1;
+      L[1][0] = -2*(GAMMAL-1)*e; L[1][1] = -4*s2*v0 + 2*(GAMMAL-1)*e*cp*v0;     L[1][2] = 4*s2*v1 - 2*(GAMMAL-1)*e*cp*v1;
+      L[2][0] = (GAMMAL-1)*e;    L[2][1] = s2*v0 + s*y*v1 - (GAMMAL-1)*e*cp*v0; L[2][2] = - s2*v1-s*y*v0 + (GAMMAL-1)*e*cp*v1;
+      L *= -0.5/e/s2;
     }
+    //R[0][0] = 1; R[0][1] = 0; R[0][2] = 0;
+    //R[1][0] = 0; R[1][1] = 1; R[1][2] = 0;
+    //R[2][0] = 0; R[2][1] = 0; R[2][2] = 1;
+    //L[0][0] = 1; L[0][1] = 0; L[0][2] = 0;
+    //L[1][0] = 0; L[1][1] = 1; L[1][2] = 0;
+    //L[2][0] = 0; L[2][1] = 0; L[2][2] = 1;
+}
 
+bU Lagranian1D::multiply(const bU& x, MAT& M) {
+  bU y;
+  y[0] = M[0][0]*x[0] + M[0][1]*x[1] + M[0][2]*x[2];
+  y[1] = M[1][0]*x[0] + M[1][1]*x[1] + M[1][2]*x[2];
+  y[2] = M[2][0]*x[0] + M[2][1]*x[1] + M[2][2]*x[2];
+  return y;
 }
 

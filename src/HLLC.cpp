@@ -28,8 +28,8 @@ bU Lagranian1D::HLLC(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double Gammal
   SR = std::max(std::max(lam2, lam4), roe_lam3);//right characteristic speed
   //SL = lam1;
   //SR = lam4;
-  //SL = -1;
-  //SR = 1;
+  SL = -1;
+  SR = 1;
   //bU CHARL, CHARR;
   //std::cout << "before\n" << CONL << "\n" << CONR << std::endl;
   //CHAR_DECOM(CONL, CONR, PRIL, PRIR, Gammal, Gammar, CHARL, CHARR, 1);
@@ -47,10 +47,21 @@ bU Lagranian1D::HLLC(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double Gammal
     if(fabs(coe1) < 1e-15) SM = coe3/coe2;
     else SM = (coe2 - sqrt(coe2*coe2 - 4.*coe1*coe3))/2./coe1;
     PM = (SM*(SL*CONL[2]-CONL[1]) + PRIL[2] - CONL[1]*(SL-PRIL[1])) / (1-SL*SM);
+    //std::cout << CONL << "\n" << CONR << std::endl;
+    //std::cout << PRIL << "\n" << PRIR << std::endl;
+    //std::cout << "coe123" << std::endl;
+    //std::cout << coe1 << "\n" << coe2 << "\n" << coe3 << std::endl;
+    //std::cout << SM << " " << PM << std::endl;
     bU F;
     F[0] = 0;
     F[1] = PM;
     F[2] = PM*SM;
+    //std::cout << "F: " << F << std::endl;
+    //double alpha;
+    //double tmpl = (1-ul*ul)*csl/(1+fabs(ul)*csl);
+    //double tmpr = (1-ur*ur)*csr/(1+fabs(ur)*csr);
+    //alpha = std::max(tmpl, tmpr);
+    //std::cout << "LF: " << LF(CONL, CONR, PRIL, PRIR, alpha) << std::endl;
     return F;
   }
 }

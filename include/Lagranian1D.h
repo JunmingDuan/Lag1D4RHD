@@ -16,6 +16,8 @@
 #include "vvector.h"
 #include "mvector.h"
 
+#define MAT mvector<mvector<double,3>,3>
+
 typedef mvector<double,3> bU; //(D, m, E), cell average
 
 class GHOST {
@@ -114,8 +116,6 @@ class Lagranian1D {
     void cal_min_max_roe_lam(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
         double& lam1, double& lam3);
 
-    void CHAR_DECOM(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double, const double, bU& CHARL, bU& CHARR, int flag);
-
     double t_step(const double CFL, double& alpha);
 
     bU F(const bU& CON, const bU& PRI);
@@ -134,8 +134,12 @@ class Lagranian1D {
     void cal_us_roeav(Sol& ReconL_Pri, Sol& ReconR_Pri, const VEC&, const VEC&, VEC& us);
     void move_mesh(VEC&, VEC&, double dt, VEC&);
 
-    void Reconstruction(const Sol&, const VEC&,//待重构变量
-        Sol&, Sol&, Sol&, Sol&);//重构得到的守恒变量和原始变量
+    void Reconstruction(const Sol& sol, const VEC& mesh,
+        Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri);
+
+    void ROE_AV_MAT(const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
+        MAT& R, MAT& L);
+    bU multiply(const bU& x, MAT& M);
 
     void Euler_forward_LF(double dt, double alpha, VEC& mesh);
     void Euler_forward_LLF(double dt, VEC& mesh);
@@ -143,6 +147,7 @@ class Lagranian1D {
 
     void RK2_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
     void RK2_LLF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
+    void RK2_HLLC(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
 
     void SSP_RK_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
     void SSP_RK_LLF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
