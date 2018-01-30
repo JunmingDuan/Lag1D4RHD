@@ -155,7 +155,7 @@ double Lagranian1D::cal_max_lambda_Eul
 }
 
 double Lagranian1D::cal_max_lambda_Lag() {
-  double tmp, a(0);
+  double a(0);
   for(u_int i = 0; i < N_x; ++i) {
     a = std::max(a, cal_max_lambda_Lag(i));
   }
@@ -191,5 +191,31 @@ double Lagranian1D::t_step(const double CFL, double& alpha) {
     a = std::min(a, tmp_t);
   }
   return CFL*a;
+}
+
+void Lagranian1D::cal_min_max_roe_lam(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
+    double& lam1, double& lam3) {
+    double hl, hr, kl, kr, gl, gr, ul, ur;
+    double v0, v1, v2;
+    hl = 1 + GAMMAL/(GAMMAL-1)*PRIL[2]/PRIL[0];
+    hr = 1 + GAMMAR/(GAMMAR-1)*PRIR[2]/PRIR[0];
+    kl = sqrt(PRIL[0]*hl);
+    kr = sqrt(PRIR[0]*hr);
+    ul = PRIL[1];
+    ur = PRIR[1];
+    gl = 1./sqrt(1-ul*ul);
+    gr = 1./sqrt(1-ur*ur);
+    v0 = (kl*gl + kr*gr)/(kl+kr);
+    v1 = (kl*gl*ul + kr*gr*ur)/(kl+kr);
+    v2 = (kl*PRIL[2]/PRIL[0]/hl + kr*PRIR[2]/PRIR[0]/hr) / (kl+kr);
+    double va = - v0*v0 + v1*v1;
+    double s2 = 0.5*GAMMAL*v2*(1-va) - 0.5*(GAMMAL-1)*(1+va);
+    double s = sqrt(s2);
+    double e = -va;
+    double y = sqrt((1-GAMMAL*v2)*e + s2);
+
+    lam1 = ((1-GAMMAL*v2)*v0*v1 - s*y) / ((1-GAMMAL*v2)*v0*v0 + s2);
+    lam3 = ((1-GAMMAR*v2)*v0*v1 + s*y) / ((1-GAMMAL*v2)*v0*v0 + s2);
+
 }
 

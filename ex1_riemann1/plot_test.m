@@ -1,11 +1,13 @@
-DAT1 = load('ex1_LF_n400_RK2_Lag.dat');
+DAT1 = load('ex1_LLF_n400_RK3_Pri_Lag.dat');
+%DAT1 = load('ex1_LLF_n400_Lag.dat');
 x1 = DAT1(:,1);
 rho1 = DAT1(:,2);
 u1 = DAT1(:,3);
 p1 = DAT1(:,4);
 e1 = DAT1(:,5);
 
-DAT10 = load('ex1_LF_n400_RK2_Eul.dat');
+DAT10 = load('ex1_LLF_n400_RK2_Pri_Eul.dat');
+%DAT10 = load('ex1_LLF_n400_Eul.dat');
 x10 = DAT10(:,1);
 rho10 = DAT10(:,2);
 u10 = DAT10(:,3);
@@ -48,19 +50,19 @@ legend('Lag', 'Eul', 'Location', 'NorthEast');
 
 %plot(x1, rho1/10, 'or', x10, rho10/10, '*b', x0, rho0/10, '-k');
 %legend('Lag', 'Eul', 'Location', 'NorthEast');
-%print('ex1_LF_n400_rho.eps', '-depsc');
+%print('ex1_LLF_n400_RK2_Pri_rho.eps', '-depsc');
 
 %plot(x1, u1, 'or', x10, u10, '*b', x0, u0, '-k');
 %legend('Lag', 'Eul', 'Location', 'NorthWest');
-%print('ex1_LF_n400_u.eps', '-depsc');
+%print('ex1_LLF_n400_RK2_Pri_u.eps', '-depsc');
 
 %plot(x1, p1*3/40, 'or', x10, p10*3/40, '*b', x0, p0*3/40, '-k');
 %legend('Lag', 'Eul', 'Location', 'NorthEast');
-%print('ex1_LF_n400_p.eps', '-depsc');
+%print('ex1_LLF_n400_RK2_Pri_p.eps', '-depsc');
 
 %plot(x1, e1, 'or', x10, e10, '*b', x0, e0, '-k');
 %legend('Lag', 'Eul', 'Location', 'NorthEast');
-%print('ex1_LF_n400_e.eps', '-depsc');
+%print('ex1_LLF_n400_RK2_Pri_e.eps', '-depsc');
 
 
 

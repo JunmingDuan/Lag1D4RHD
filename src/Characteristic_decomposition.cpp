@@ -6,10 +6,10 @@ void multiply(const bU& x, mvector<mvector<double,3>,3>& M, bU& y) {
   y[2] = M[2][0]*x[0] + M[2][1]*x[1] + M[2][2]*x[2];
 }
 
-void Lagranian1D::CHAR_DECOM(const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
-    bU& CHARL, bU& CHARR) {
+void Lagranian1D::CHAR_DECOM(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double GAMMAL, const double GAMMAR,
+    bU& CHARL, bU& CHARR, int flag) {
     double hl, hr, kl, kr, gl, gr, ul, ur;
-    double r1, r2, r3;
+    double v0, v1, v2;
     hl = 1 + GAMMAL/(GAMMAL-1)*PRIL[2]/PRIL[0];
     hr = 1 + GAMMAR/(GAMMAR-1)*PRIR[2]/PRIR[0];
     kl = sqrt(PRIL[0]*hl);
@@ -18,28 +18,36 @@ void Lagranian1D::CHAR_DECOM(const bU& PRIL, const bU& PRIR, const double GAMMAL
     ur = PRIR[1];
     gl = 1./sqrt(1-ul*ul);
     gr = 1./sqrt(1-ur*ur);
-    r1 = (kl*gl + kr*gr)/(kl+kr);
-    r2 = (kl*gl*ul + kr*gr*ur)/(kl+kr);
-    r3 = (kl*PRIL[2]/PRIL[0]/hl + kr*PRIR[2]/PRIR[0]/hr) / (kl+kr);
-    double cm = 1 - GAMMAL*r3/(GAMMAL-1);
-    double cp = 1 + GAMMAL*r3/(GAMMAL-1);
-    double v2 = r1*r1 + r2*r2;
-    double s2 = 0.5*GAMMAL*r3*(1-v2) - 0.5*(GAMMAL-1)*(1+v2);
+    v0 = (kl*gl + kr*gr)/(kl+kr);
+    v1 = (kl*gl*ul + kr*gr*ur)/(kl+kr);
+    v2 = (kl*PRIL[2]/PRIL[0]/hl + kr*PRIR[2]/PRIR[0]/hr) / (kl+kr);
+    double cm = 1 - GAMMAL*v2/(GAMMAL-1);
+    double cp = 1 + GAMMAL*v2/(GAMMAL-1);
+    double va = - v0*v0 + v1*v1;
+    double s2 = 0.5*GAMMAL*v2*(1-va) - 0.5*(GAMMAL-1)*(1+va);
     double s = sqrt(s2);
-    double e = r1*r1 - r2*r2;
-    double y = sqrt((1-GAMMAL*r3)*e + s2);
+    double e = -va;
+    double y = sqrt((1-GAMMAL*v2)*e + s2);
 
-    mvector<mvector<double,3>,3> M;
-    M[0][0] = cm;
-    M[0][1] = cm + s2/(GAMMAL-1);
-    M[0][2] = cm;
-    M[1][0] = r1 - s/y*r2;
-    M[1][1] = r1;
-    M[1][2] = r1 + s/y*r1;
-    M[2][0] = r2 + s/y*r1;
-    M[2][1] = r2;
-    M[2][2] = r2 - s/y*r2;
+    mvector<mvector<double,3>,3> R;
+    R[0][0] = cm;          R[0][1] = cm + s2/(GAMMAL-1); R[0][2] = cm;
+    R[1][0] = v0 - s/y*v1; R[1][1] = v0;                 R[1][2] = v0 + s/y*v1;
+    R[2][0] = v1 - s/y*v0; R[2][1] = v1;                 R[2][2] = v1 + s/y*v0;
 
+    mvector<mvector<double,3>,3> L;
+    L[0][0] = (GAMMAL-1)*e;    L[0][1] = s2*v0 - s*y*v1 - (GAMMAL-1)*e*cp*v0; L[0][2] = - s2*v1+s*y*v0 + (GAMMAL-1)*e*cp*v1;
+    L[1][0] = -2*(GAMMAL-1)*e; L[1][1] = -4*s2*v0 + 2*(GAMMAL-1)*e*cp*v0;     L[1][2] = 4*s2*v1 - 2*(GAMMAL-1)*e*cp*v1;
+    L[2][0] = (GAMMAL-1)*e;    L[2][1] = s2*v0 + s*y*v1 - (GAMMAL-1)*e*cp*v0; L[2][2] = - s2*v1-s*y*v0 + (GAMMAL-1)*e*cp*v1;
+    L *= -0.5/e/s2;
+
+    if(flag == 1) {
+      multiply(CONL, R, CHARL);
+      multiply(CONR, R, CHARR);
+    }
+    else if(flag == -1) {
+      multiply(CHARL, L, CONL);
+      multiply(CHARR, L, CONR);
+    }
 
 }
 

@@ -111,7 +111,10 @@ class Lagranian1D {
     double cal_max_lambda_Lag(const bU& Con, const bU& Pri, const double Gamma);
     double cal_max_lambda_Eul(const bU& Con, const bU& Pri, const double Gamma);
 
-    void CHAR_DECOM(const bU& PRIL, const bU& PRIR, const double, const double, bU& CHARL, bU& CHARR);
+    void cal_min_max_roe_lam(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
+        double& lam1, double& lam3);
+
+    void CHAR_DECOM(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double, const double, bU& CHARL, bU& CHARR, int flag);
 
     double t_step(const double CFL, double& alpha);
 
@@ -124,7 +127,7 @@ class Lagranian1D {
     bU LLF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha);
     void cal_flux_LLF(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri, Sol& FLUX);
 
-    bU HLLC(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double Gammal, const double Gammar, double&);
+    bU HLLC(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double Gammal, const double Gammar, double&);
     void cal_flux_HLLC(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri,
         Sol& FLUX, VEC& us);
 
@@ -139,8 +142,10 @@ class Lagranian1D {
     void Euler_forward_HLLC(const double dt, VEC& mesh);
 
     void RK2_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
+    void RK2_LLF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
 
     void SSP_RK_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
+    void SSP_RK_LLF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
     void SSP_RK_HLLC(Sol& Con, Sol& Pri, VEC& mesh, const double dt);
 
   public:

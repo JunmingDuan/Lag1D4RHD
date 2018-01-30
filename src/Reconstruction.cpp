@@ -2,9 +2,8 @@
 #include "WENO_nonuniform.h"
 #include "ENO.h"
 
-////ENO
 void Lagranian1D::Reconstruction(const Sol& sol, const VEC& mesh,
-    Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri) {
+    Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri) { //ENO
   if(is_RECON == 0) {//sol,gl,gr are conservative variables
 #pragma omp parallel for num_threads(Nthread)
     for(u_int i = 0; i < N_x+1; ++i) {
@@ -134,7 +133,11 @@ void Lagranian1D::Reconstruction(const Sol& sol, const VEC& mesh,
 #pragma omp parallel for num_threads(Nthread)
     for(u_int i = 0; i < N_x; ++i) {
       h[i] = mesh[i+1] - mesh[i];
-      (sol[i]);
+    }
+#pragma omp parallel for num_threads(Nthread)
+    for(u_int i = 0; i < N_x+1; ++i) {
+      //CHAR_DECOM(, bU& CONR, sol[i], sol[i+1], Gamma[i], Gamma[i+1],
+          //CHARL, CHARR, 1);
     }
 #pragma omp parallel for num_threads(Nthread)
     for(u_int i = 0; i < N_x; ++i) {//number of the cell
@@ -179,9 +182,8 @@ void Lagranian1D::Reconstruction(const Sol& sol, const VEC& mesh,
 
 }
 
-////WENO
 //void Lagranian1D::Reconstruction(const Sol& sol, const VEC& mesh,
-    //Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri) {
+    //Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri) { //WENO
   //if(is_RECON == 0) {//sol,gl,gr are conservative variables
 //#pragma omp parallel for num_threads(Nthread)
     //for(u_int i = 0; i < N_x+1; ++i) {
