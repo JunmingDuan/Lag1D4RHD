@@ -1,5 +1,5 @@
-%DAT1 = load('ex1_LLF_n400_RK3_Pri_Lag.dat');
-DAT1 = load('sol.dat');
+%DAT1 = load('ex1_HLLC_n400_RK2_Cha_Lag.dat');
+DAT1 = load('ex1_HLLC_n400_RK3_Con_Lag.dat');
 x1 = DAT1(:,1);
 rho1 = DAT1(:,2);
 u1 = DAT1(:,3);
