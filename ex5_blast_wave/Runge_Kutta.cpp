@@ -61,6 +61,8 @@ void Lagranian1D::Euler_forward_LLF(double dt, VEC& mesh) {
     Pri[i] = Con2Pri(Con[i], Gamma[i]);
   }
   update_cs(cs);
+  //std::cout << Con << std::endl;
+  //std::cout << Pri << std::endl;
 }
 
 void Lagranian1D::Euler_forward_HLLC(const double dt, VEC& mesh) {

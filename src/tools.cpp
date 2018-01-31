@@ -182,6 +182,7 @@ void Lagranian1D::update_sol(VEC& mesh, Sol& Con, Sol& Pri, Sol& FLUX, const dou
 
 double Lagranian1D::t_step(const double CFL, double& alpha) {
   double a(1), tmp_lam, hi, tmp_t;
+  double roe_lam1, roe_lam3;
   alpha = 0;
   for(u_int i = 0; i < N_x; ++i) {
     hi = mesh[i+1] - mesh[i];
@@ -189,6 +190,13 @@ double Lagranian1D::t_step(const double CFL, double& alpha) {
     alpha = std::max(alpha, tmp_lam);
     tmp_t = hi/alpha;
     a = std::min(a, tmp_t);
+    //roe_average_characteristic_speed
+    if(i != N_x-1) {
+      cal_min_max_roe_lam(Con[i], Con[i+1], Pri[i], Pri[i+1], Gamma[i], Gamma[i+1], roe_lam1, roe_lam3);
+      tmp_lam = std::max(tmp_lam, std::max(fabs(roe_lam1), fabs(roe_lam3)));
+      tmp_t = hi/alpha;
+      a = std::min(a, tmp_t);
+    }
   }
   return CFL*a;
 }
@@ -216,6 +224,33 @@ void Lagranian1D::cal_min_max_roe_lam(const bU& CONL, const bU& CONR, const bU& 
 
     lam1 = ((1-GAMMAL*v2)*v0*v1 - s*y) / ((1-GAMMAL*v2)*v0*v0 + s2);
     lam3 = ((1-GAMMAR*v2)*v0*v1 + s*y) / ((1-GAMMAL*v2)*v0*v0 + s2);
+
+}
+
+double Lagranian1D::cal_max_roe_lam_Lag(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR) {
+    double hl, hr, kl, kr, gl, gr, ul, ur;
+    double v0, v1, v2;
+    hl = 1 + GAMMAL/(GAMMAL-1)*PRIL[2]/PRIL[0];
+    hr = 1 + GAMMAR/(GAMMAR-1)*PRIR[2]/PRIR[0];
+    kl = sqrt(PRIL[0]*hl);
+    kr = sqrt(PRIR[0]*hr);
+    ul = PRIL[1];
+    ur = PRIR[1];
+    gl = 1./sqrt(1-ul*ul);
+    gr = 1./sqrt(1-ur*ur);
+    v0 = (kl*gl + kr*gr)/(kl+kr);
+    v1 = (kl*gl*ul + kr*gr*ur)/(kl+kr);
+    v2 = (kl*PRIL[2]/PRIL[0]/hl + kr*PRIR[2]/PRIR[0]/hr) / (kl+kr);
+    double va = - v0*v0 + v1*v1;
+    double s2 = 0.5*GAMMAL*v2*(1-va) - 0.5*(GAMMAL-1)*(1+va);
+    double s = sqrt(s2);
+    double e = -va;
+    double y = sqrt((1-GAMMAL*v2)*e + s2);
+
+    double lam1 = ((1-GAMMAL*v2)*v0*v1 - s*y) / ((1-GAMMAL*v2)*v0*v0 + s2);
+    double lam2 = v1/v0;
+    double lam3 = ((1-GAMMAR*v2)*v0*v1 + s*y) / ((1-GAMMAL*v2)*v0*v0 + s2);
+    return std::max(fabs(lam1-lam2), fabs(lam3-lam2));
 
 }
 

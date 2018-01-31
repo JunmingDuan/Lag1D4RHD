@@ -18,9 +18,18 @@
 
 bU initial(const double t, const double x, double& Gamma) {
   bU v;
-  v[0] = 1+0.2*sin(2.*M_PI*x);
-  v[1] = 0.2;
-  v[2] = 1.0;
+  if(x < 0.5) {
+    v[0] = 1.0;
+    v[1] = 0;
+    v[2] = 1e3;
+    Gamma = 5./3;
+  }
+  else {
+    v[0] = 1.0;
+    v[1] = 0;
+    v[2] = 1e-2;
+    Gamma = 5./3;
+  }
 
   return v;
 }

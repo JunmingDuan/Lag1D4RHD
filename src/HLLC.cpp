@@ -13,23 +13,15 @@ bU Lagranian1D::HLLC(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double Gammal
   ul = PRIL[1];
   lam1 = ul-(1-ul*ul)*csl/(1-ul*csl);//negative speed
   lam2 = ul+(1-ul*ul)*csl/(1+ul*csl);//positive speed
-  //lam1 = -(1-ul*ul)*csl/(1-ul*csl);//negative speed
-  //lam2 = +(1-ul*ul)*csl/(1+ul*csl);//positive speed
   hr = 1+PRIR[2]/PRIR[0]*Gammar/(Gammar-1);
   csr = sqrt(Gammar*PRIR[2]/PRIR[0]/hr);
   ur = PRIR[1];
   lam3 = ur-(1-ur*ur)*csr/(1-ur*csr);//negative speed
   lam4 = ur+(1-ur*ur)*csr/(1+ur*csr);//positive speed
-  //lam3 = -(1-ur*ur)*csr/(1-ur*csr);//negative speed
-  //lam4 = +(1-ur*ur)*csr/(1+ur*csr);//positive speed
   //SL = std::min(lam1, lam3);//left characteristic speed
   //SR = std::max(lam2, lam4);//right characteristic speed
   SL = std::min(std::min(lam1, lam3), roe_lam1);//left characteristic speed
   SR = std::max(std::max(lam2, lam4), roe_lam3);//right characteristic speed
-  //SL = lam1;
-  //SR = lam4;
-  SL = -1;
-  SR = 1;
   //bU CHARL, CHARR;
   //std::cout << "before\n" << CONL << "\n" << CONR << std::endl;
   //CHAR_DECOM(CONL, CONR, PRIL, PRIR, Gammal, Gammar, CHARL, CHARR, 1);

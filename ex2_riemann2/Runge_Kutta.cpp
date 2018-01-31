@@ -61,6 +61,8 @@ void Lagranian1D::Euler_forward_LLF(double dt, VEC& mesh) {
     Pri[i] = Con2Pri(Con[i], Gamma[i]);
   }
   update_cs(cs);
+  //std::cout << Con << std::endl;
+  //std::cout << Pri << std::endl;
 }
 
 void Lagranian1D::Euler_forward_HLLC(const double dt, VEC& mesh) {
@@ -313,17 +315,8 @@ void Lagranian1D::SSP_RK_LLF(Sol& Con, Sol& Pri, VEC& mesh, const double dt) {
   else if(is_RECON == 2 || is_RECON == 3) {
     Reconstruction(Pri, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
   }
-  cal_flux_LLF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX);
   cal_us_roeav(ReconL_Pri, ReconR_Pri, GAMMAL, GAMMAR, us);
-  //std::cout << "stage1" << std::endl;
-  //std::cout << "Con\n" << Con << std::endl;
-  //std::cout << "Pri\n" << Pri << std::endl;
-  //std::cout << "ReconL_Con\n" << ReconL_Con << std::endl;
-  //std::cout << "ReconR_Con\n" << ReconR_Con << std::endl;
-  //std::cout << "ReconL_Pri\n" << ReconL_Pri << std::endl;
-  //std::cout << "ReconR_Pri\n" << ReconR_Pri << std::endl;
-  //std::cout << "FLUX\n" << FLUX << std::endl;
-  //abort();
+  cal_flux_LLF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh[i] = mesh[i] + dt * us[i];
@@ -341,17 +334,8 @@ void Lagranian1D::SSP_RK_LLF(Sol& Con, Sol& Pri, VEC& mesh, const double dt) {
   else if(is_RECON == 2 || is_RECON == 3) {
     Reconstruction(Pri, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
   }
-  cal_flux_LLF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX);
   cal_us_roeav(ReconL_Pri, ReconR_Pri, GAMMAL, GAMMAR, us);
-  //std::cout << "stage2" << std::endl;
-  //std::cout << "Con\n" << Con << std::endl;
-  //std::cout << "Pri\n" << Pri << std::endl;
-  //std::cout << "ReconL_Con\n" << ReconL_Con << std::endl;
-  //std::cout << "ReconR_Con\n" << ReconR_Con << std::endl;
-  //std::cout << "ReconL_Pri\n" << ReconL_Pri << std::endl;
-  //std::cout << "ReconR_Pri\n" << ReconR_Pri << std::endl;
-  //std::cout << "FLUX\n" << FLUX << std::endl;
-
+  cal_flux_LLF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh1[i] = 0.75*mesh_n[i] + 0.25*(mesh[i] + dt * us[i]);
@@ -370,18 +354,8 @@ void Lagranian1D::SSP_RK_LLF(Sol& Con, Sol& Pri, VEC& mesh, const double dt) {
   else if(is_RECON == 2 || is_RECON == 3) {
     Reconstruction(Pri, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
   }
-  cal_flux_LLF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX);
   cal_us_roeav(ReconL_Pri, ReconR_Pri, GAMMAL, GAMMAR, us);
-
-  //std::cout << "stage3" << std::endl;
-  //std::cout << "Con\n" << Con << std::endl;
-  //std::cout << "Pri\n" << Pri << std::endl;
-  //std::cout << "ReconL_Con\n" << ReconL_Con << std::endl;
-  //std::cout << "ReconR_Con\n" << ReconR_Con << std::endl;
-  //std::cout << "ReconL_Pri\n" << ReconL_Pri << std::endl;
-  //std::cout << "ReconR_Pri\n" << ReconR_Pri << std::endl;
-  //std::cout << "FLUX\n" << FLUX << std::endl;
-
+  cal_flux_LLF(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX);
 #pragma omp parallel for num_threads(Nthread)
   for(u_int i = 0; i < N_x+1; ++i) {
     mesh[i] = 1./3*mesh_n[i] + 2./3*(mesh1[i] + dt * us[i]);

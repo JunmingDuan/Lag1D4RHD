@@ -1,5 +1,38 @@
 #include "Lagranian1D.h"
 
+void Lagranian1D::Chara_MAT(const bU& PRIL, const double GAMMAL,
+    MAT& R, MAT& L) {
+    double hl, hr, kl, kr, gl, gr, ul, ur;
+    double v0, v1, v2;
+    hl = 1 + GAMMAL/(GAMMAL-1)*PRIL[2]/PRIL[0];
+    kl = sqrt(PRIL[0]*hl);
+    ul = PRIL[1];
+    gl = 1./sqrt(1-ul*ul);
+    v0 = gl;
+    v1 = gl*ul;
+    v2 = PRIL[2]/PRIL[0]/hl;
+    double cm = 1 - GAMMAL*v2/(GAMMAL-1);
+    double cp = 1 + GAMMAL*v2/(GAMMAL-1);
+    double va = - v0*v0 + v1*v1;
+    double s2 = 0.5*GAMMAL*v2*(1-va) - 0.5*(GAMMAL-1)*(1+va);
+    double s = sqrt(s2);
+    double e = -va;
+    double y = sqrt((1-GAMMAL*v2)*e + s2);
+
+    {//right characteristic matrix, R
+      R[0][0] = cm;          R[0][1] = cm + s2/(GAMMAL-1); R[0][2] = cm;
+      R[1][0] = v1 - s/y*v0; R[1][1] = v1;                 R[1][2] = v1 + s/y*v0;
+      R[2][0] = v0 - s/y*v1; R[2][1] = v0;                 R[2][2] = v0 + s/y*v1;
+    }
+    {//left characteristic matrix, L
+      L[0][0] = (GAMMAL-1)*e;    L[0][1] = - s2*v1+s*y*v0 + (GAMMAL-1)*e*cp*v1; L[0][2] = s2*v0 - s*y*v1 - (GAMMAL-1)*e*cp*v0;
+      L[1][0] = -2*(GAMMAL-1)*e; L[1][1] = 4*s2*v1 - 2*(GAMMAL-1)*e*cp*v1;      L[1][2] = -4*s2*v0 + 2*(GAMMAL-1)*e*cp*v0;
+      L[2][0] = (GAMMAL-1)*e;    L[2][1] = - s2*v1-s*y*v0 + (GAMMAL-1)*e*cp*v1; L[2][2] = s2*v0 + s*y*v1 - (GAMMAL-1)*e*cp*v0;
+      L *= -0.5/e/s2;
+    }
+}
+
+
 void Lagranian1D::ROE_AV_MAT(const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
     MAT& R, MAT& L) {
     double hl, hr, kl, kr, gl, gr, ul, ur;

@@ -115,6 +115,7 @@ class Lagranian1D {
 
     void cal_min_max_roe_lam(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
         double& lam1, double& lam3);
+    double cal_max_roe_lam_Lag(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR);
 
     double t_step(const double CFL, double& alpha);
 
@@ -140,6 +141,7 @@ class Lagranian1D {
     void ROE_AV_MAT(const bU& PRIL, const bU& PRIR, const double GAMMAL, const double GAMMAR,
         MAT& R, MAT& L);
     bU multiply(const bU& x, MAT& M);
+    void Chara_MAT(const bU& PRIL, const double GAMMAL, MAT& R, MAT& L);
 
     void Euler_forward_LF(double dt, double alpha, VEC& mesh);
     void Euler_forward_LLF(double dt, VEC& mesh);
