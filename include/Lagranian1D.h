@@ -128,6 +128,10 @@ class Lagranian1D {
     bU LLF(const bU& CONL, const bU& CONR, const bU& PRIL, const bU& PRIR, const double alpha);
     void cal_flux_LLF(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri, Sol& FLUX);
 
+    bU HLL(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double Gammal, const double Gammar, double&);
+    void cal_flux_HLL(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri,
+        Sol& FLUX, VEC& us);
+
     bU HLLC(bU& CONL, bU& CONR, bU& PRIL, bU& PRIR, const double Gammal, const double Gammar, double&);
     void cal_flux_HLLC(Sol& ReconL_Con, Sol& ReconR_Con, Sol& ReconL_Pri, Sol& ReconR_Pri,
         Sol& FLUX, VEC& us);
@@ -145,6 +149,7 @@ class Lagranian1D {
 
     void Euler_forward_LF(double dt, double alpha, VEC& mesh);
     void Euler_forward_LLF(double dt, VEC& mesh);
+    void Euler_forward_HLL(const double dt, VEC& mesh);
     void Euler_forward_HLLC(const double dt, VEC& mesh);
 
     void RK2_LF(Sol& Con, Sol& Pri, VEC& mesh, const double dt);

@@ -63,6 +63,29 @@ void Lagranian1D::Euler_forward_LLF(double dt, VEC& mesh) {
   update_cs(cs);
 }
 
+void Lagranian1D::Euler_forward_HLL(const double dt, VEC& mesh) {
+  VEC GAMMAL(N_x+1), GAMMAR(N_x+1);
+  add_BD_GAMMA(GAMMAL, GAMMAR);
+  Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
+  cal_us_roeav(ReconL_Pri, ReconR_Pri, GAMMAL, GAMMAR, us);
+  cal_flux_HLL(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, us);
+#pragma omp parallel for num_threads(Nthread)
+  for(u_int i = 0; i < N_x; ++i) {
+    Con[i] *= (mesh[i+1]-mesh[i]);
+  }
+  move_mesh(mesh, us, dt, mesh);
+#pragma omp parallel for num_threads(Nthread)
+  for(u_int i = 0; i < N_x; ++i) {
+    Con[i] = (Con[i] - dt*(FLUX[i+1] - FLUX[i])) / (mesh[i+1]-mesh[i]);
+  }
+#pragma omp parallel for num_threads(Nthread)
+  for(u_int i = 0; i < N_x; ++i) {
+    Pri[i] = Con2Pri(Con[i], Gamma[i]);
+  }
+  update_cs(cs);
+}
+
+
 void Lagranian1D::Euler_forward_HLLC(const double dt, VEC& mesh) {
   Reconstruction(Con, mesh, ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri);
   cal_flux_HLLC(ReconL_Con, ReconR_Con, ReconL_Pri, ReconR_Pri, FLUX, us);

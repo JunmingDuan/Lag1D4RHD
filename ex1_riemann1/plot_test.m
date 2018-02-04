@@ -1,4 +1,4 @@
-DAT1 = load('ex1_LLF_n400_RK3_Pri_Lag.dat');
+DAT1 = load('sol.dat');
 %DAT1 = load('ex1_LLF_n400_Lag.dat');
 x1 = DAT1(:,1);
 rho1 = DAT1(:,2);
